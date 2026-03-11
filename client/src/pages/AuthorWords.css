@@ -1,0 +1,21 @@
+.author-page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 0 1rem 2rem;
+}
+
+.author-page__main {
+  max-width: 560px;
+  margin: 0 auto;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--text-muted);
+}
+
+.author-page__main p {
+  margin: 0 0 1rem;
+}
+
+.author-page__main strong {
+  color: var(--text);
+}
