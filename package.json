@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "人际关系/恋爱匹配网页 - 根据文档构想实现",
   "private": true,
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "install:all": "npm install && cd client && npm install && cd ../server && npm install",
     "dev": "concurrently \"npm run server\" \"npm run client\"",

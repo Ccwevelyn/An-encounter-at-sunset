@@ -2,6 +2,9 @@
   "name": "relationship-match-server",
   "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0 <22.0.0"
+  },
   "scripts": {
     "dev": "node --watch index.js",
     "start": "node index.js"
