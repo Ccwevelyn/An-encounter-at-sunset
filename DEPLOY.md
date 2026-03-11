@@ -4,7 +4,7 @@
 
 ---
 
-## 方式一：Railway（推荐，约 5 分钟）
+## 方式一：Render（免费，适合体验）
 
 1. **代码推到 GitHub**
    - 在项目根目录执行：
@@ -15,37 +15,28 @@
    ```
    - 在 [GitHub](https://github.com/new) 新建仓库，按页面提示把本地仓库 push 上去。
 
-2. **用 Railway 部署**
-   - 打开 [railway.app](https://railway.app)，用 GitHub 登录。
-   - 点击 **New Project** → **Deploy from GitHub repo**，选你的仓库。
-   - 在项目里点 **Variables**，添加：
-     - `NODE_ENV` = `production`（可选）
-   - 点 **Settings** → **Build**：
-     - **Build Command**：`npm run install:all && npm run build`
-     - **Start Command**：`npm run start`
-     - **Root Directory**：留空（仓库根目录）
-   - 保存后会自动构建并部署。部署完成后在 **Settings** → **Networking** 里点 **Generate Domain**，会得到一个 `xxx.railway.app` 的网址，用浏览器打开即可。
-
-3. **数据持久化（SQLite）**
-   - Railway 免费版会提供临时磁盘，重启/重新部署后 `data.db` 可能被清空。若需要长期保留数据，可在 Railway 里为服务挂载 **Volume**（在服务 → **Volumes** 里创建并挂到 `server` 目录），把 `server/data.db` 放在挂载路径下。
-
----
-
-## 方式二：Render（免费，适合体验）
-
-1. 代码同样先推到 GitHub。
-
 2. 打开 [render.com](https://render.com)，用 GitHub 登录 → **New** → **Web Service**，选你的仓库。
 
 3. 配置：
    - **Build Command**：`npm run install:all && npm run build`
    - **Start Command**：`npm run start`
-   - **Instance Type**：选 Free（可选）
+   - **Instance Type**：选 **Free**
 
-4. 创建后会自动部署。在 **Settings** → **Environment** 可加 `NODE_ENV=production`（可选）。  
-   部署完成后会得到一个 `xxx.onrender.com` 的网址。
+4. 创建后会自动部署。部署完成会得到一个 `xxx.onrender.com` 的网址，用浏览器打开即可。
 
-**注意**：Render 免费实例休眠后，磁盘会清空，SQLite 数据会丢失；仅适合演示，不适合长期存数据。
+**注意**：免费实例一段时间不用会休眠，唤醒较慢；磁盘不持久，SQLite 数据在重启/重新部署后会丢失，适合演示或短期使用。
+
+---
+
+## 方式二：Railway（付费，试用后约 $5/月）
+
+Railway 目前**没有长期免费套餐**，只有约 30 天试用（含 $5 额度），之后需付费（Hobby 约 $5/月）。
+
+若你愿意付费或只用试用期：
+- 打开 [railway.app](https://railway.app)，用 GitHub 登录 → **New Project** → **Deploy from GitHub repo**。
+- **Build Command**：`npm run install:all && npm run build`
+- **Start Command**：`npm run start`
+- 在 **Networking** 里 **Generate Domain** 得到网址。需要长期保留 SQLite 数据可挂载 **Volume** 到 `server` 目录。
 
 ---
 
@@ -99,6 +90,6 @@
 |------|------|
 | 打开网址白屏 / 404 | 确认 **Build Command** 包含 `npm run build`，且 **Start Command** 是 `npm run start`（会先 build 再起服务）。 |
 | 接口 404 / 跨域 | 前端已用相对路径 `/api`，同一域名下无需改配置。 |
-| 重新部署后数据没了 | 使用 Railway Volume 或自有服务器持久化 `server/data.db`；Render 免费版不保证持久化。 |
+| 重新部署后数据没了 | Render 免费版不持久化磁盘；要长期存数据请用自有服务器或 Railway 付费 + Volume。 |
 
 按上面任选一种方式部署后，即可用生成的网址在浏览器中打开页面。
