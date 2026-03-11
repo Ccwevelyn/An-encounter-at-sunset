@@ -32,11 +32,10 @@ function formatValue(d) {
   return `${y}-${m}-${day}`;
 }
 
-const YEAR_PAGE_SIZE = 20; // 一页显示 20 个年份
+const MIN_YEAR = 1900;
 
 export default function DatePicker({ value, onChange, placeholder = '请选择日期', className = '' }) {
   const [open, setOpen] = useState(false);
-  const [viewMode, setViewMode] = useState('month'); // 'month' | 'year'
   const [view, setView] = useState(() => {
     if (value) {
       const [y, m] = value.split('-').map(Number);
@@ -45,8 +44,10 @@ export default function DatePicker({ value, onChange, placeholder = '请选择�
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
   });
-  const [yearPage, setYearPage] = useState(0); // 年份列表的页码，每页 YEAR_PAGE_SIZE 年
   const ref = useRef(null);
+  const maxYear = new Date().getFullYear() + 1;
+  const yearOptions = [];
+  for (let y = maxYear; y >= MIN_YEAR; y--) yearOptions.push(y);
 
   const valueDate = value ? (() => {
     const [y, m, d] = value.split('-').map(Number);
@@ -54,14 +55,9 @@ export default function DatePicker({ value, onChange, placeholder = '请选择�
   })() : null;
 
   useEffect(() => {
-    if (open) setViewMode('month');
-  }, [open]);
-
-  useEffect(() => {
     if (value && open) {
       const [y, m] = value.split('-').map(Number);
       setView({ year: y, month: m - 1 });
-      setYearPage(Math.floor(y / YEAR_PAGE_SIZE) * YEAR_PAGE_SIZE);
     }
   }, [value, open]);
 
@@ -86,25 +82,9 @@ export default function DatePicker({ value, onChange, placeholder = '请选择�
     else setView({ year: view.year, month: view.month + 1 });
   };
 
-  const now = new Date();
-  const minYear = 1900;
-  const maxYear = now.getFullYear() + 1;
-  const yearPageStart = Math.max(minYear, yearPage);
-  const yearPageEnd = Math.min(maxYear, yearPage + YEAR_PAGE_SIZE - 1);
-  const yearList = [];
-  for (let y = yearPageStart; y <= yearPageEnd; y++) yearList.push(y);
-
-  const prevYearPage = () => setYearPage((p) => Math.max(minYear, p - YEAR_PAGE_SIZE));
-  const nextYearPage = () => setYearPage((p) => Math.min(p + YEAR_PAGE_SIZE, Math.max(minYear, maxYear - YEAR_PAGE_SIZE + 1)));
-
-  const openYearPicker = () => {
-    setYearPage(Math.floor(view.year / YEAR_PAGE_SIZE) * YEAR_PAGE_SIZE);
-    setViewMode('year');
-  };
-
-  const selectYear = (y) => {
-    setView((v) => ({ ...v, year: y }));
-    setViewMode('month');
+  const handleYearChange = (e) => {
+    const y = parseInt(e.target.value, 10);
+    if (!Number.isNaN(y)) setView((v) => ({ ...v, year: y }));
   };
 
   const handleSelect = (cell) => {
@@ -130,78 +110,53 @@ export default function DatePicker({ value, onChange, placeholder = '请选择�
 
       {open && (
         <div className="date-picker__dropdown">
-          {viewMode === 'month' ? (
-            <>
-              <div className="date-picker__nav">
-                <button type="button" className="date-picker__nav-btn" onClick={prevMonth} aria-label="上一月">
-                  ‹
-                </button>
-                <span className="date-picker__nav-title">
-                  <button type="button" className="date-picker__nav-year" onClick={openYearPicker} title="点击切换年份">
-                    {view.year}年
-                  </button>
-                  {view.month + 1}月
-                </span>
-                <button type="button" className="date-picker__nav-btn" onClick={nextMonth} aria-label="下一月">
-                  ›
-                </button>
-              </div>
-              <div className="date-picker__weekdays">
-                {WEEKDAYS.map((w) => (
-                  <span key={w} className="date-picker__weekday">{w}</span>
+          <div className="date-picker__nav">
+            <button type="button" className="date-picker__nav-btn" onClick={prevMonth} aria-label="上一月">
+              ‹
+            </button>
+            <span className="date-picker__nav-title">
+              <select
+                className="date-picker__year-select"
+                value={view.year}
+                onChange={handleYearChange}
+                aria-label="选择年份"
+                title="快捷选择年份"
+              >
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>{y}年</option>
                 ))}
-              </div>
-              <div className="date-picker__grid">
-                {cells.map((cell, i) => {
-                  const isSelected = value && cell.current && value === formatValue(cell.date);
-                  const isToday = (() => {
-                    const t = new Date();
-                    return cell.current && cell.date.getFullYear() === t.getFullYear() &&
-                      cell.date.getMonth() === t.getMonth() && cell.date.getDate() === t.getDate();
-                  })();
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      className={`date-picker__day ${!cell.current ? 'date-picker__day--other' : ''} ${isSelected ? 'date-picker__day--selected' : ''} ${isToday ? 'date-picker__day--today' : ''}`}
-                      onClick={() => handleSelect(cell)}
-                    >
-                      {cell.day}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="date-picker__nav">
-                <button type="button" className="date-picker__nav-btn" onClick={prevYearPage} aria-label="上若干年">
-                  ‹
+              </select>
+              <span className="date-picker__month-text">{view.month + 1}月</span>
+            </span>
+            <button type="button" className="date-picker__nav-btn" onClick={nextMonth} aria-label="下一月">
+              ›
+            </button>
+          </div>
+          <div className="date-picker__weekdays">
+            {WEEKDAYS.map((w) => (
+              <span key={w} className="date-picker__weekday">{w}</span>
+            ))}
+          </div>
+          <div className="date-picker__grid">
+            {cells.map((cell, i) => {
+              const isSelected = value && cell.current && value === formatValue(cell.date);
+              const isToday = (() => {
+                const t = new Date();
+                return cell.current && cell.date.getFullYear() === t.getFullYear() &&
+                  cell.date.getMonth() === t.getMonth() && cell.date.getDate() === t.getDate();
+              })();
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  className={`date-picker__day ${!cell.current ? 'date-picker__day--other' : ''} ${isSelected ? 'date-picker__day--selected' : ''} ${isToday ? 'date-picker__day--today' : ''}`}
+                  onClick={() => handleSelect(cell)}
+                >
+                  {cell.day}
                 </button>
-                <span className="date-picker__nav-title">
-                  {yearPageStart} – {yearPageEnd}
-                </span>
-                <button type="button" className="date-picker__nav-btn" onClick={nextYearPage} aria-label="下若干年">
-                  ›
-                </button>
-              </div>
-              <div className="date-picker__year-grid">
-                {yearList.map((y) => (
-                  <button
-                    key={y}
-                    type="button"
-                    className={`date-picker__year-btn ${y === view.year ? 'date-picker__year-btn--current' : ''}`}
-                    onClick={() => selectYear(y)}
-                  >
-                    {y}
-                  </button>
-                ))}
-              </div>
-              <button type="button" className="date-picker__back-month" onClick={() => setViewMode('month')}>
-                返回月历
-              </button>
-            </>
-          )}
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

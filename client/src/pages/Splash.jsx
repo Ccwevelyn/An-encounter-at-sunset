@@ -5,6 +5,7 @@ export default function Splash({ onFinish, onSkipForever }) {
   const [phase, setPhase] = useState(0);
   const [skipForever, setSkipForever] = useState(false);
 
+  // 两粒点：相遇 → 错过 → 再相遇 约 3.2s，然后显示英文
   useEffect(() => {
     if (phase >= 1) return;
     const t = setTimeout(() => setPhase(1), 3200);
@@ -20,12 +21,10 @@ export default function Splash({ onFinish, onSkipForever }) {
     <div className="splash">
       <div className="splash__bg" />
       <div className="splash__center">
-        {/* 两个白点相向而行，碰到后停在中间不再分开 */}
-        <div className="splash__dots">
+        <div className="splash__dots" aria-hidden="true">
           <span className="splash__dot splash__dot--left" />
           <span className="splash__dot splash__dot--right" />
         </div>
-        {/* 文字出现后一直保留在页面中 */}
         <div className="splash__quote-wrap">
           {phase >= 1 && (
             <p className="splash__quote">

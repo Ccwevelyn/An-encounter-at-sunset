@@ -61,6 +61,8 @@ function normalizeName(name) {
 export default function ChinaMapPicker({ value, onChange, title = '点击地图选择地区', multiple = false }) {
   const chartRef = useRef(null);
   const instanceRef = useRef(null);
+  const valueRef = useRef(value);
+  valueRef.current = value;
   const valueArr = multiple ? (Array.isArray(value) ? value : value ? [value] : []) : [];
 
   useEffect(() => {
@@ -117,12 +119,15 @@ export default function ChinaMapPicker({ value, onChange, title = '点击地图�
       const province = normalizeName(params.name);
       if (!province) return;
       if (multiple) {
-        const next = valueArr.includes(province)
-          ? valueArr.filter((p) => p !== province)
-          : [...valueArr, province];
+        const current = Array.isArray(valueRef.current) ? valueRef.current : valueRef.current ? [valueRef.current] : [];
+        const next = current.includes(province)
+          ? current.filter((p) => p !== province)
+          : [...current, province];
         onChange(next);
       } else {
-        onChange(province);
+        // 单选：再次点击已选省份则取消选择
+        const current = valueRef.current;
+        onChange(current === province ? '' : province);
       }
     };
     chart.on('click', handler);
@@ -149,12 +154,15 @@ export default function ChinaMapPicker({ value, onChange, title = '点击地图�
         }
       });
     } else if (value) {
+      instanceRef.current.dispatchAction({ type: 'downplay' });
       const mapNames = PROVINCE_TO_MAP_NAMES[value];
       if (mapNames && mapNames[0]) {
         instanceRef.current.dispatchAction({ type: 'highlight', name: mapNames[0] });
       }
+    } else {
+      instanceRef.current.dispatchAction({ type: 'downplay' });
     }
-  }, [multiple, value]);
+  }, [multiple, value, valueArr]);
 
   const removeOne = (prov) => {
     if (multiple) onChange(valueArr.filter((p) => p !== prov));

@@ -14,9 +14,9 @@ const BUDGET_OPTIONS = [
 ];
 
 const STEPS = [
-  { key: 'degree', title: '现在是什么学位？', type: 'select', options: DEGREES },
-  { key: 'college', title: '学院', type: 'select', optionsKey: 'colleges', dependsOn: 'degree' },
-  { key: 'major', title: '专业', type: 'select', optionsKey: 'majors', dependsOn: 'college' },
+  { key: 'degree', title: '请选择学位（学士 / 硕士 / 博士）', type: 'select', options: DEGREES },
+  { key: 'college', title: '请选择学院（简称见选项）', type: 'select', optionsKey: 'colleges', dependsOn: 'degree' },
+  { key: 'major', title: '请选择专业', type: 'select', optionsKey: 'majors', dependsOn: 'college' },
   { key: 'gender', title: '性别', type: 'choice', options: ['男', '女', '其他'] },
   { key: 'preferred_gender', title: '希望匹配的性别', type: 'choice', options: ['男', '女', '不限'] },
   { key: 'birthday', title: '生日', type: 'date' },
@@ -181,15 +181,8 @@ export default function Onboarding({ user, onDone }) {
           <p className="onboarding__note">
             {current.key === 'mbti' ? (
               <>
-                选择「
-                <button type="button" className="onboarding__note-link" onClick={() => update(current.key, MBTI_UNKNOWN)}>
-                  不知道
-                </button>
-                」可先跳过，或点击下方链接做免费测试后再选类型。
-                <br />
-                <a href={MBTI_TEST_URL} target="_blank" rel="noopener noreferrer" className="onboarding__mbti-link">
-                  打开免费 MBTI 测试（OpenJung）
-                </a>
+                选择「<a href="#" className="onboarding__note-link" onClick={(e) => { e.preventDefault(); update(current.key, MBTI_UNKNOWN); }}>不知道</a>」可稍后在个人页补充，或前往{' '}
+                <a href={MBTI_TEST_URL} target="_blank" rel="noopener noreferrer" className="onboarding__mbti-link">免费 MBTI 测试</a>获取结果。
               </>
             ) : (
               current.note

@@ -91,6 +91,7 @@ export default function Home({ user, onLogout, refreshUser }) {
         {error && <p className="home__error">{error}</p>}
 
         <section className="home__links">
+          <Link to="/chats" className="home__link">聊天 · 查看所有对话</Link>
           <Link to="/profile" className="home__link">用户自定义 · 个人资料与介绍</Link>
           <Link to="/author" className="home__link">作者的话</Link>
         </section>

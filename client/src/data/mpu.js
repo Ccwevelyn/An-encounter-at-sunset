@@ -1,9 +1,10 @@
-// 澳门理工大学官网学位、学院、课程名称
-// 学术单位来源：https://www.mpu.edu.mo/postgraduate/zh/undergraduate_programmes.php
-// 学士课程名称：https://www.mpu.edu.mo/admission_mainland/zh/general_programmes.php
-// 官网：https://mpusite.mpu.edu.mo/ / https://www.mpu.edu.mo/
+// 澳门理工大学（MPU）学位、学院、专业 — 依官网整理
+// 官网：https://www.mpu.edu.mo/zh/index.php
+// 学士/硕士/博士课程：https://www.mpu.edu.mo/esca/zh/ （招生处）
+// 学院简称：FCA 应用科学学院, FHSS 健康科学及体育学院, FLT 语言及翻译学院,
+//          FAD 艺术及设计学院, FHS 人文及社会科学学院, FCE 管理科学学院
 
-/** 学位：中文（英文），与官网一致 */
+/** 学位：中文（英文），先选学位再选学院 */
 export const DEGREES = [
   { label: '学士 (Bachelor)', value: '学士' },
   { label: '硕士 (Master)', value: '硕士' },
@@ -11,8 +12,7 @@ export const DEGREES = [
 ];
 
 /**
- * 按学位可选的学院 = 官网「学术单位」
- * 名称与 https://www.mpu.edu.mo/postgraduate/zh/undergraduate_programmes.php 表格一致
+ * 按学位可选的学院，学院名称后标注英文简称（与澳门理工大学官网一致）
  */
 export const COLLEGES_BY_DEGREE = {
   学士: [
@@ -22,7 +22,7 @@ export const COLLEGES_BY_DEGREE = {
     { label: '艺术及设计学院 (FAD)', value: '艺术及设计学院', en: 'FAD', fullEn: 'Faculty of Arts and Design' },
     { label: '人文及社会科学学院 (FHS)', value: '人文及社会科学学院', en: 'FHS', fullEn: 'Faculty of Humanities and Social Sciences' },
     { label: '管理科学学院 (FCE)', value: '管理科学学院', en: 'FCE', fullEn: 'Faculty of Business' },
-    { label: '北京大学医学部——澳门理工大学护理书院', value: '北京大学医学部——澳门理工大学护理书院', en: 'Nursing Academy', fullEn: 'Peking University Health Science Center - MPU Nursing Academy' },
+    { label: '北京大学医学部——澳门理工大学护理书院 (Nursing Academy)', value: '北京大学医学部——澳门理工大学护理书院', en: 'Nursing Academy', fullEn: 'Peking University Health Science Center - MPU Nursing Academy' },
   ],
   硕士: [
     { label: '应用科学学院 (FCA)', value: '应用科学学院', en: 'FCA', fullEn: 'Faculty of Applied Sciences' },

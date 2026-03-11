@@ -477,6 +477,40 @@
   color: var(--accent);
 }
 
+/* MBTI：E 人 / I 人 分块展示 */
+.profile-page__mbti {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.profile-page__mbti-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.profile-page__mbti-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.profile-page__mbti-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0.75rem 0 0;
+}
+
+.profile-page__mbti-link {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.profile-page__mbti-link:hover {
+  text-decoration: underline;
+}
+
 .profile-page__form-actions {
   display: flex;
   gap: 0.75rem;

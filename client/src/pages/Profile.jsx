@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { saveProfile } from '../api';
 import { getDegreeDisplay, getCollegeDisplay, DEGREES, getCollegesForDegree, getMajorsForCollege } from '../data/mpu';
-import { MBTI_E, MBTI_I, MBTI_UNKNOWN } from '../data/mbti';
+import { MBTI_E, MBTI_I, MBTI_UNKNOWN, MBTI_TEST_URL } from '../data/mbti';
 import DatePicker from '../components/DatePicker';
 import ChinaMapPicker from '../components/ChinaMapPicker';
 import './Profile.css';
@@ -322,20 +322,27 @@ export default function Profile({ user, onLogout, refreshUser }) {
               </div>
               <div className="profile-page__form-row">
                 <label>MBTI</label>
-                <div className="profile-page__choices" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>E 人</span>
-                  <div className="profile-page__choices">
-                    {MBTI_E.map((opt) => (
-                      <button key={opt} type="button" className={`profile-page__choice-btn ${form.mbti === opt ? 'active' : ''}`} onClick={() => setForm({ ...form, mbti: opt })}>{opt}</button>
-                    ))}
+                <div className="profile-page__mbti">
+                  <div className="profile-page__mbti-group">
+                    <span className="profile-page__mbti-label">E 人</span>
+                    <div className="profile-page__choices">
+                      {MBTI_E.map((opt) => (
+                        <button key={opt} type="button" className={`profile-page__choice-btn ${form.mbti === opt ? 'active' : ''}`} onClick={() => setForm({ ...form, mbti: opt })}>{opt}</button>
+                      ))}
+                    </div>
                   </div>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.5rem 0 0.25rem' }}>I 人</span>
-                  <div className="profile-page__choices">
-                    {MBTI_I.map((opt) => (
-                      <button key={opt} type="button" className={`profile-page__choice-btn ${form.mbti === opt ? 'active' : ''}`} onClick={() => setForm({ ...form, mbti: opt })}>{opt}</button>
-                    ))}
+                  <div className="profile-page__mbti-group">
+                    <span className="profile-page__mbti-label">I 人</span>
+                    <div className="profile-page__choices">
+                      {MBTI_I.map((opt) => (
+                        <button key={opt} type="button" className={`profile-page__choice-btn ${form.mbti === opt ? 'active' : ''}`} onClick={() => setForm({ ...form, mbti: opt })}>{opt}</button>
+                      ))}
+                    </div>
                   </div>
-                  <button type="button" className={`profile-page__choice-btn ${form.mbti === MBTI_UNKNOWN ? 'active' : ''}`} onClick={() => setForm({ ...form, mbti: MBTI_UNKNOWN })}>{MBTI_UNKNOWN}</button>
+                  <p className="profile-page__mbti-note">
+                    暂不确定？选择「<a href="#" className="profile-page__mbti-link" onClick={(e) => { e.preventDefault(); setForm({ ...form, mbti: MBTI_UNKNOWN }); }}>不知道</a>」或前往{' '}
+                    <a href={MBTI_TEST_URL} target="_blank" rel="noopener noreferrer" className="profile-page__mbti-link">免费 MBTI 测试</a>。
+                  </p>
                 </div>
               </div>
               <div className="profile-page__form-row">
