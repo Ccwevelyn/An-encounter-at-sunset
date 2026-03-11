@@ -8,7 +8,7 @@ import DatePicker from '../components/DatePicker';
 import ChinaMapPicker from '../components/ChinaMapPicker';
 import './Onboarding.css';
 
-const LONGEST_OPTIONS = ['<1个月', '1-3月', '3-6月', '1年', '2年', '3年', '>3年', '>5年'];
+const LONGEST_OPTIONS = ['<1个月', '1-3月', '3-6月', '1年', '2年', '>3年'];
 const BUDGET_OPTIONS = [
   'A. 小于3k', 'B. 3k-5k', 'C. 5k-8k', 'D. 8k+', 'E. 1W+',
 ];
@@ -18,13 +18,13 @@ const STEPS = [
   { key: 'college', title: '请选择学院（简称见选项）', type: 'select', optionsKey: 'colleges', dependsOn: 'degree' },
   { key: 'major', title: '请选择专业', type: 'select', optionsKey: 'majors', dependsOn: 'college' },
   { key: 'gender', title: '性别', type: 'choice', options: ['男', '女', '其他'] },
-  { key: 'preferred_gender', title: '希望匹配的性别', type: 'choice', options: ['男', '女', '不限'] },
+  { key: 'preferred_gender', title: '希望匹配到的性别', type: 'choice', options: ['男', '女', '不限'], note: '仅会匹配到双向符合性别偏好的人。' },
   { key: 'birthday', title: '生日', type: 'date' },
   { key: 'mbti', title: 'MBTI', type: 'mbti_group', note: true },
   { key: 'relationship_count', title: '感情经历', type: 'choice', options: ['0段', '半段', '1段', '2段', '3段及以上'] },
-  { key: 'longest_relationship', title: '最长一段恋爱的时间', type: 'choice_grid_4', options: LONGEST_OPTIONS, hideWhen: { relationship_count: '0段' } },
+  { key: 'longest_relationship', title: '最长一段恋爱时间', type: 'choice_grid_3', options: LONGEST_OPTIONS, hideWhen: { relationship_count: '0段' } },
   { key: 'purpose', title: '谈恋爱的目的', type: 'choice', options: ['专注当下的快乐', '走向未来的婚姻'] },
-  { key: 'cities', title: '毕业3年内打算发展的省份（可多选）', type: 'china_map_multi', showWhen: { purpose: '走向未来的婚姻' } },
+  { key: 'cities', title: '毕业3年内打算发展的城市（可多选）', type: 'china_map_multi', showWhen: { purpose: '走向未来的婚姻' } },
   { key: 'monthly_budget', title: '月花销', type: 'budget_grid', options: BUDGET_OPTIONS, showWhen: { purpose: '走向未来的婚姻' } },
   { key: 'hometown_province', title: '家乡所在省份', type: 'china_map', options: PROVINCES },
   { key: 'love_index', title: '想恋爱指数（1～5）', type: 'slider', min: 1, max: 5 },
@@ -82,7 +82,7 @@ export default function Onboarding({ user, onDone }) {
       return;
     }
     if ((current.type === 'citygrid' || current.type === 'china_map_multi') && (!Array.isArray(v) || v.length === 0)) {
-      setError(current.type === 'china_map_multi' ? '请至少选择一个省份' : '请至少选择一个城市');
+      setError(current.type === 'china_map_multi' ? '请至少选择一个城市/地区' : '请至少选择一个城市');
       return;
     }
     if (currentIndex < visibleSteps.length - 1) {
@@ -221,6 +221,21 @@ export default function Onboarding({ user, onDone }) {
           </div>
         )}
 
+        {current.type === 'choice_grid_3' && (
+          <div className="onboarding__grid-3">
+            {current.options.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                className={form[current.key] === opt ? 'active' : ''}
+                onClick={() => update(current.key, opt)}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        )}
+
         {current.type === 'choice_grid_4' && (
           <div className="onboarding__grid-4">
             {current.options.map((opt) => (
@@ -293,7 +308,7 @@ export default function Onboarding({ user, onDone }) {
             multiple
             value={form[current.key] || []}
             onChange={(v) => update(current.key, v)}
-            title="点击地图上的省份多选，再点可取消"
+            title="点击地图选择城市/地区，可多选，再次点击可取消"
           />
         )}
 

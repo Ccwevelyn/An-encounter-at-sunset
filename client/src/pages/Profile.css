@@ -446,6 +446,12 @@
   font-weight: 500;
 }
 
+.profile-page__field-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0.2rem 0 0.35rem;
+}
+
 .profile-page__form-row select,
 .profile-page__form-row input[type="text"] {
   padding: 0.5rem 0.75rem;
@@ -460,6 +466,26 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.profile-page__choices--grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* 月花销：第一行 3 个，第二行 2 个 */
+.profile-page__budget {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.profile-page__budget .profile-page__choice-btn:nth-child(4) {
+  grid-column: 1;
+}
+
+.profile-page__budget .profile-page__choice-btn:nth-child(5) {
+  grid-column: 2;
 }
 
 .profile-page__form-row .profile-page__choice-btn {

@@ -7,7 +7,7 @@ import DatePicker from '../components/DatePicker';
 import ChinaMapPicker from '../components/ChinaMapPicker';
 import './Profile.css';
 
-const LONGEST_OPTIONS = ['<1个月', '1-3月', '3-6月', '1年', '2年', '3年', '>3年', '>5年'];
+const LONGEST_OPTIONS = ['<1个月', '1-3月', '3-6月', '1年', '2年', '>3年'];
 const BUDGET_OPTIONS = ['A. 小于3k', 'B. 3k-5k', 'C. 5k-8k', 'D. 8k+', 'E. 1W+'];
 const RELATIONSHIP_OPTIONS = ['0段', '半段', '1段', '2段', '3段及以上'];
 const PURPOSE_OPTIONS = ['专注当下的快乐', '走向未来的婚姻'];
@@ -60,7 +60,7 @@ export default function Profile({ user, onLogout, refreshUser }) {
     { label: '生日', value: p.birthday },
   ];
   const loveItems = [
-    { label: '希望匹配的性别', value: p.preferred_gender ?? '—' },
+    { label: '希望匹配到的性别', value: p.preferred_gender ?? '—' },
     { label: 'MBTI', value: p.mbti },
     { label: '感情经历', value: p.relationship_count },
     { label: '最长一段恋爱时间', value: p.longest_relationship },
@@ -68,7 +68,7 @@ export default function Profile({ user, onLogout, refreshUser }) {
     { label: '想恋爱指数', value: p.love_index != null ? `${p.love_index} / 5` : '—' },
   ];
   const placeItems = [
-    { label: '发展的省份', value: Array.isArray(cities) ? cities.join('、') : showValue(cities) },
+    { label: '发展的城市', value: Array.isArray(cities) ? cities.join('、') : showValue(cities) },
     { label: '月花销', value: p.monthly_budget },
     { label: '家乡省份', value: p.hometown_province },
   ];
@@ -309,7 +309,8 @@ export default function Profile({ user, onLogout, refreshUser }) {
                 </div>
               </div>
               <div className="profile-page__form-row">
-                <label>希望匹配的性别</label>
+                <label>希望匹配到的性别</label>
+                <p className="profile-page__field-hint">仅会匹配到双向符合性别偏好的人</p>
                 <div className="profile-page__choices">
                   {PREFERRED_GENDER_OPTIONS.map((g) => (
                     <button key={g} type="button" className={`profile-page__choice-btn ${form.preferred_gender === g ? 'active' : ''}`} onClick={() => setForm({ ...form, preferred_gender: g })}>{g}</button>
@@ -355,7 +356,7 @@ export default function Profile({ user, onLogout, refreshUser }) {
               </div>
               <div className="profile-page__form-row">
                 <label>最长一段恋爱时间</label>
-                <div className="profile-page__choices">
+                <div className="profile-page__choices profile-page__choices--grid-3">
                   {LONGEST_OPTIONS.map((o) => (
                     <button key={o} type="button" className={`profile-page__choice-btn ${form.longest_relationship === o ? 'active' : ''}`} onClick={() => setForm({ ...form, longest_relationship: o })}>{o}</button>
                   ))}
@@ -372,12 +373,12 @@ export default function Profile({ user, onLogout, refreshUser }) {
               {form.purpose === '走向未来的婚姻' && (
                 <>
                   <div className="profile-page__form-row">
-                    <label>发展的省份（可多选）</label>
-                    <ChinaMapPicker multiple value={form.cities} onChange={(v) => setForm({ ...form, cities: v })} title="" />
+                    <label>发展的城市（可多选，地图选择）</label>
+                    <ChinaMapPicker multiple value={form.cities} onChange={(v) => setForm({ ...form, cities: v })} title="点击地图选省/地区，再次点击取消" />
                   </div>
                   <div className="profile-page__form-row">
                     <label>月花销</label>
-                    <div className="profile-page__choices">
+                    <div className="profile-page__budget">
                       {BUDGET_OPTIONS.map((o) => (
                         <button key={o} type="button" className={`profile-page__choice-btn ${form.monthly_budget === o ? 'active' : ''}`} onClick={() => setForm({ ...form, monthly_budget: o })}>{o}</button>
                       ))}

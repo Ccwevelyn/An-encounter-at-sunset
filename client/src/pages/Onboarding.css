@@ -219,7 +219,29 @@
   color: var(--accent);
 }
 
-/* 4 列网格（如最长恋爱时间：2 行 × 4 列，共 7 项） */
+/* 3 列网格（如最长恋爱时间：2 行 × 3 列，共 6 项） */
+.onboarding__grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.onboarding__grid-3 button {
+  padding: 0.5rem 0.75rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+}
+
+.onboarding__grid-3 button.active {
+  border-color: var(--accent);
+  background: rgba(201, 168, 108, 0.15);
+  color: var(--accent);
+}
+
+/* 4 列网格 */
 .onboarding__grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -264,20 +286,29 @@
   color: var(--accent);
 }
 
+/* 月花销：第一行 3 个，第二行 2 个 */
 .onboarding__budget_grid {
   margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .onboarding__budget_row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
+}
+
+.onboarding__budget_row:first-child {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.onboarding__budget_row:last-child {
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .onboarding__budget_row button {
-  flex: 1;
-  min-width: 100px;
   padding: 0.6rem;
   background: var(--bg);
   border: 1px solid var(--border);

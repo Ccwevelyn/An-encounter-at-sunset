@@ -66,7 +66,7 @@ export default function MatchResult({ user }) {
     { label: '生日', value: p.birthday },
   ];
   const loveItems = [
-    { label: '希望匹配的性别', value: p.preferred_gender },
+    { label: '希望匹配到的性别', value: p.preferred_gender },
     { label: 'MBTI', value: p.mbti },
     { label: '感情经历', value: p.relationship_count },
     { label: '最长一段恋爱时间', value: p.longest_relationship },
@@ -74,7 +74,7 @@ export default function MatchResult({ user }) {
     { label: '想恋爱指数', value: p.love_index != null ? `${p.love_index} / 5` : '—' },
   ];
   const placeItems = [
-    { label: '发展的省份', value: cities.length ? cities.join('、') : '—' },
+    { label: '发展的城市', value: cities.length ? cities.join('、') : '—' },
     { label: '月花销', value: p.monthly_budget },
     { label: '家乡省份', value: p.hometown_province },
   ];
