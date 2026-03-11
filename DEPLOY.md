@@ -18,9 +18,10 @@
 2. 打开 [render.com](https://render.com)，用 GitHub 登录 → **New** → **Web Service**，选你的仓库。
 
 3. 配置：
-   - **Build Command**：`npm run install:all && npm run build`
+   - **Build Command**：`npm run install:all`（在 Render 上不跑前端构建，避免 OOM；前端使用仓库里已提交的 `client/dist`）
    - **Start Command**：`npm run start`
    - **Instance Type**：选 **Free**
+   - 若出现 `better-sqlite3` / `invalid ELF header`，请确认**未**把 `server/node_modules` 提交到仓库，且 Build Command 为 `npm run install:all`，让依赖在 Linux 上重新安装。
 
 4. 创建后会自动部署。部署完成会得到一个 `xxx.onrender.com` 的网址，用浏览器打开即可。
 
