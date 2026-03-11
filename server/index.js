@@ -26,6 +26,8 @@ if (existsSync(distPath)) {
   app.use(express.static(distPath));
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
+    // 禁止缓存 index.html，确保部署后用户拿到最新前端
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.sendFile(join(distPath, 'index.html'));
   });
 }

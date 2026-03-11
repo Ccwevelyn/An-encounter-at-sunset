@@ -73,7 +73,7 @@ export default function Home({ user, onLogout, refreshUser }) {
         <section className="home__modes">
           <div className="home__mode-card">
             <h2>随机匹配</h2>
-            <p>我不管谁与我相符，我只看缘分。当双方同时点过此模式后即可开启匹配。</p>
+            <p>可选择开启随机匹配状态，开启后即可被匹配；按双向性别偏好过滤后随机一人。</p>
             <button type="button" onClick={handleRandom} disabled={loading}>
               {loading && mode === 'random' ? '匹配中…' : '开始随机匹配'}
             </button>
