@@ -15,7 +15,7 @@ const BUDGET_OPTIONS = [
 
 const STEPS = [
   { key: 'degree', title: '请选择学位（学士 / 硕士 / 博士）', type: 'select', options: DEGREES },
-  { key: 'college', title: '请选择学院（简称见选项）', type: 'select', optionsKey: 'colleges', dependsOn: 'degree' },
+  { key: 'college', title: '请选择学院', type: 'select', optionsKey: 'colleges', dependsOn: 'degree' },
   { key: 'major', title: '请选择专业', type: 'select', optionsKey: 'majors', dependsOn: 'college' },
   { key: 'gender', title: '性别', type: 'choice', options: ['男', '女', '其他'] },
   { key: 'preferred_gender', title: '希望匹配到的性别', type: 'choice', options: ['男', '女', '不限'], note: '仅会匹配到双向符合性别偏好的人。' },

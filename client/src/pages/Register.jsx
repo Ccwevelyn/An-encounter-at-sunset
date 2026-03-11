@@ -16,7 +16,7 @@ export default function Register({ onRegister }) {
     e.preventDefault();
     setError('');
     if (!email.trim().toLowerCase().endsWith(EMAIL_SUFFIX)) {
-      setError('等待远方的邂逅');
+      setError('邮箱须为 @mpu.edu.mo 结尾');
       return;
     }
     setLoading(true);
@@ -34,7 +34,6 @@ export default function Register({ onRegister }) {
     <div className="auth">
       <div className="auth__card">
         <h1 className="auth__title">注册</h1>
-        <p className="auth__subtitle">邮箱须为 @mpu.edu.mo</p>
         <form onSubmit={handleSubmit} className="auth__form">
           {error && <p className="auth__error">{error}</p>}
           <label>

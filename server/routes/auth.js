@@ -14,7 +14,7 @@ router.post('/register', (req, res) => {
   }
   const trimmedEmail = String(email).trim().toLowerCase();
   if (!trimmedEmail.endsWith(EMAIL_SUFFIX)) {
-    return res.status(400).json({ error: '等待远方的邂逅', code: 'EMAIL_SUFFIX' });
+    return res.status(400).json({ error: '邮箱须为 @mpu.edu.mo 结尾', code: 'EMAIL_SUFFIX' });
   }
   const trimmedNickname = String(nickname).trim();
   const existing = db.prepare('SELECT id FROM users WHERE email = ? OR nickname = ?').get(trimmedEmail, trimmedNickname);
