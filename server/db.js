@@ -65,5 +65,8 @@ try {
 try {
   db.exec(`ALTER TABLE profiles ADD COLUMN preferred_gender TEXT`);
 } catch (_) {}
+try {
+  db.exec(`ALTER TABLE profiles ADD COLUMN avatar TEXT`);
+} catch (_) {}
 
 export default db;

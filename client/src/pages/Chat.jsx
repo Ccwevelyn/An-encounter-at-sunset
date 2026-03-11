@@ -69,7 +69,14 @@ export default function Chat({ user }) {
     <div className="chat-page">
       <header className="chat-page__header">
         <Link to={`/match/${partnerId}`} className="chat-page__back">← 返回</Link>
-        <span className="chat-page__title">{partner?.user?.nickname || '聊天'}</span>
+        <div className="chat-page__title-wrap">
+          {partner?.profile?.avatar ? (
+            <img src={partner.profile.avatar} alt="" className="chat-page__avatar" />
+          ) : (
+            <span className="chat-page__avatar-placeholder" />
+          )}
+          <span className="chat-page__title">{partner?.user?.nickname || '聊天'}</span>
+        </div>
       </header>
 
       <ul className="chat-page__list" ref={listRef}>

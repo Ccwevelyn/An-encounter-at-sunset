@@ -39,6 +39,7 @@ export default function Profile({ user, onLogout, refreshUser }) {
   const [editing, setEditing] = useState(false);
   const [intro, setIntro] = useState(p.intro || '');
   const [photos, setPhotos] = useState(() => parsePhotos(p.photos));
+  const [avatar, setAvatar] = useState(p.avatar || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [editArchive, setEditArchive] = useState(false);
@@ -47,7 +48,8 @@ export default function Profile({ user, onLogout, refreshUser }) {
   useEffect(() => {
     setIntro(p.intro || '');
     setPhotos(parsePhotos(p.photos));
-  }, [p.intro, p.photos]);
+    setAvatar(p.avatar || '');
+  }, [p.intro, p.photos, p.avatar]);
 
   const degreeDisplay = (p?.degree != null && p.degree !== '') ? getDegreeDisplay(p.degree) : '—';
   const basicItems = [
@@ -75,7 +77,7 @@ export default function Profile({ user, onLogout, refreshUser }) {
     setError('');
     setSaving(true);
     try {
-      await saveProfile({ ...p, intro: intro.trim(), cities, photos });
+      await saveProfile({ ...p, intro: intro.trim(), cities, photos, avatar: avatar || p.avatar });
       setEditing(false);
       if (refreshUser) refreshUser();
     } catch (err) {
@@ -83,6 +85,19 @@ export default function Profile({ user, onLogout, refreshUser }) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      setAvatar(dataUrl);
+      saveProfile({ ...p, intro: p.intro, cities, photos: parsePhotos(p.photos), avatar: dataUrl }).then(() => refreshUser?.()).catch(() => {});
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   const handlePhotoAdd = (e) => {
@@ -96,7 +111,7 @@ export default function Profile({ user, onLogout, refreshUser }) {
       reader.onload = () => {
         setPhotos((prev) => {
           const n = [...prev, reader.result].slice(0, MAX_PHOTOS);
-          saveProfile({ ...p, intro: p.intro, cities, photos: n }).then(() => refreshUser?.()).catch(() => {});
+          saveProfile({ ...p, intro: p.intro, cities, photos: n, avatar: p.avatar }).then(() => refreshUser?.()).catch(() => {});
           return n;
         });
       };
@@ -108,7 +123,7 @@ export default function Profile({ user, onLogout, refreshUser }) {
   const handlePhotoRemove = (index) => {
     const next = photos.filter((_, i) => i !== index);
     setPhotos(next);
-    saveProfile({ ...p, intro: p.intro, cities, photos: next }).then(() => refreshUser?.()).catch(() => {});
+    saveProfile({ ...p, intro: p.intro, cities, photos: next, avatar: p.avatar }).then(() => refreshUser?.()).catch(() => {});
   };
 
   const PREFERRED_GENDER_OPTIONS = ['男', '女', '不限'];
@@ -155,6 +170,7 @@ export default function Profile({ user, onLogout, refreshUser }) {
         love_index: form.love_index != null ? form.love_index : null,
         intro: p.intro,
         photos: parsePhotos(p.photos),
+        avatar: p.avatar,
       };
       await saveProfile(payload);
       setEditArchive(false);
@@ -184,10 +200,20 @@ export default function Profile({ user, onLogout, refreshUser }) {
 
       <main className="profile-page__main">
         <section className="profile-page__hero">
+          <label className="profile-page__avatar-wrap" title="点击上传头像">
+            <input type="file" accept="image/*" onChange={handleAvatarChange} className="profile-page__avatar-input" />
+            {avatar ? (
+              <img src={avatar} alt="" className="profile-page__avatar-img" />
+            ) : (
+              <span className="profile-page__avatar-placeholder">头像</span>
+            )}
+            <span className="profile-page__avatar-hint">点击更换</span>
+          </label>
           <h1 className="profile-page__name">{user?.nickname}</h1>
           <p className="profile-page__email">{user?.email}</p>
         </section>
 
+        <div className="profile-page__content">
         <section className="profile-page__card profile-page__intro-card">
           <h2>个人简介与照片</h2>
           <div className="profile-page__photos">
@@ -408,6 +434,7 @@ export default function Profile({ user, onLogout, refreshUser }) {
             </>
           )}
         </section>
+        </div>
       </main>
     </div>
   );

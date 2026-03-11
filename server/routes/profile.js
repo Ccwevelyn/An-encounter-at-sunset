@@ -30,6 +30,7 @@ router.get('/', (req, res) => {
     love_index: row.love_index,
     intro: row.intro,
     photos: row.photos,
+    avatar: row.avatar,
     random_mode_enabled: row.random_mode_enabled,
     fate_mode_enabled: row.fate_mode_enabled,
     random_mode_ts: row.random_mode_ts,
@@ -58,18 +59,19 @@ router.put('/', (req, res) => {
     love_index: p.love_index != null ? p.love_index : null,
     intro: p.intro,
     photos: Array.isArray(p.photos) ? JSON.stringify(p.photos) : (p.photos || null),
+    avatar: p.avatar != null && p.avatar !== '' ? String(p.avatar) : null,
     random_mode_enabled: p.random_mode_enabled ? 1 : 0,
     fate_mode_enabled: p.fate_mode_enabled ? 1 : 0,
     random_mode_ts: p.random_mode_ts || null,
   };
   db.prepare(`
-    INSERT INTO profiles (user_id, degree, gender, preferred_gender, college, major, birthday, mbti, relationship_count, longest_relationship, purpose, cities, monthly_budget, hometown_province, love_index, intro, photos, random_mode_enabled, fate_mode_enabled, random_mode_ts, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    INSERT INTO profiles (user_id, degree, gender, preferred_gender, college, major, birthday, mbti, relationship_count, longest_relationship, purpose, cities, monthly_budget, hometown_province, love_index, intro, photos, avatar, random_mode_enabled, fate_mode_enabled, random_mode_ts, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     ON CONFLICT(user_id) DO UPDATE SET
       degree=excluded.degree, gender=excluded.gender, preferred_gender=excluded.preferred_gender, college=excluded.college, major=excluded.major, birthday=excluded.birthday,
       mbti=excluded.mbti, relationship_count=excluded.relationship_count, longest_relationship=excluded.longest_relationship,
       purpose=excluded.purpose, cities=excluded.cities, monthly_budget=excluded.monthly_budget,
-      hometown_province=excluded.hometown_province, love_index=excluded.love_index, intro=excluded.intro, photos=excluded.photos,
+      hometown_province=excluded.hometown_province, love_index=excluded.love_index, intro=excluded.intro, photos=excluded.photos, avatar=excluded.avatar,
       random_mode_enabled=excluded.random_mode_enabled, fate_mode_enabled=excluded.fate_mode_enabled, random_mode_ts=excluded.random_mode_ts,
       updated_at=datetime('now')
   `).run(
@@ -90,6 +92,7 @@ router.put('/', (req, res) => {
     fields.love_index,
     fields.intro,
     fields.photos,
+    fields.avatar,
     fields.random_mode_enabled,
     fields.fate_mode_enabled,
     fields.random_mode_ts

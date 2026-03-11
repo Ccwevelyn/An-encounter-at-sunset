@@ -56,6 +56,7 @@ export default function MatchResult({ user }) {
   const { user: u, profile: p } = partner;
   const cities = Array.isArray(p.cities) ? p.cities : (typeof p.cities === 'string' ? (() => { try { return JSON.parse(p.cities); } catch { return []; } })() : []);
   const photos = Array.isArray(p.photos) ? p.photos : (typeof p.photos === 'string' ? (() => { try { return JSON.parse(p.photos); } catch { return []; } })() : []);
+  const avatarUrl = p.avatar || (photos.length > 0 ? photos[0] : null);
 
   const basicItems = [
     { label: '学位', value: getDegreeDisplay(p.degree) },
@@ -88,9 +89,9 @@ export default function MatchResult({ user }) {
 
       <main className="match-result__main">
         <section className="match-result__hero">
-          {photos.length > 0 ? (
+          {avatarUrl ? (
             <div className="match-result__avatar-wrap">
-              <img src={photos[0]} alt="" className="match-result__avatar" />
+              <img src={avatarUrl} alt="" className="match-result__avatar" />
             </div>
           ) : (
             <div className="match-result__avatar-placeholder" />
@@ -101,10 +102,17 @@ export default function MatchResult({ user }) {
           </Link>
         </section>
 
-        {p.intro && (
+        {(p.intro || photos.length > 0) && (
           <section className="match-result__card match-result__intro">
             <h2 className="match-result__card-title">个人介绍</h2>
-            <p className="match-result__intro-text">{p.intro}</p>
+            {p.intro && <p className="match-result__intro-text">{p.intro}</p>}
+            {photos.length > 0 && (
+              <div className="match-result__photos">
+                {photos.map((src, i) => (
+                  <img key={i} src={src} alt="" className="match-result__photo" />
+                ))}
+              </div>
+            )}
           </section>
         )}
 

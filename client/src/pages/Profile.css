@@ -53,7 +53,7 @@
   color: var(--err);
 }
 
-/* 主内容区：居中卡片 */
+/* 主内容区：居中卡片，大屏放宽以容纳两列 */
 .profile-page__main {
   width: 100%;
   max-width: 520px;
@@ -62,18 +62,85 @@
   align-items: stretch;
 }
 
-/* 顶部：头像区 + 昵称邮箱 */
+@media (min-width: 720px) {
+  .profile-page__header,
+  .profile-page__main {
+    max-width: 900px;
+  }
+}
+
+/* 顶部：头像 + 昵称邮箱 */
 .profile-page__hero {
   text-align: center;
   margin-bottom: 2rem;
   padding: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.profile-page__avatar-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-soft);
+  border: 3px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.profile-page__avatar-wrap:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.profile-page__avatar-wrap:hover .profile-page__avatar-hint {
+  opacity: 1;
+}
+
+.profile-page__avatar-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.profile-page__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-page__avatar-placeholder {
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+.profile-page__avatar-hint {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
 .profile-page__name {
   font-family: var(--font-serif);
   font-size: 1.85rem;
   font-weight: 600;
-  margin: 0 0 0.35rem;
+  margin: 0;
   color: var(--text);
   letter-spacing: 0.02em;
 }
@@ -82,6 +149,28 @@
   font-size: 0.9rem;
   color: var(--text-muted);
   margin: 0;
+}
+
+/* 主内容区：大屏两列 */
+.profile-page__content {
+  width: 100%;
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 720px) {
+  .profile-page__content {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+
+  .profile-page__intro-card {
+    grid-column: 1;
+  }
+
+  .profile-page__archive {
+    grid-column: 2;
+  }
 }
 
 /* 卡片通用 */
@@ -105,6 +194,10 @@
 }
 
 /* 个人简介与照片 */
+.profile-page__intro-card h2 {
+  margin-bottom: 0.75rem;
+}
+
 .profile-page__intro-card .profile-page__intro-text {
   font-size: 0.95rem;
   line-height: 1.75;
