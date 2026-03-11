@@ -104,35 +104,30 @@ function acceptsGender(preferred, otherGender) {
   return preferred === otherGender;
 }
 
-// 随机匹配：双方都开启随机模式且“同时”在排队（这里简化为：都开启了随机模式且最近 N 分钟内点过）
-const RANDOM_WINDOW_MS = 5 * 60 * 1000; // 5 分钟
-
+// 随机匹配：可选择是否开启随机匹配状态，开启后即可被匹配；双向性别过滤，再随机一人
 router.post('/random/join', (req, res) => {
-  const myProfile = db.prepare('SELECT random_mode_enabled, random_mode_ts, gender, preferred_gender FROM profiles WHERE user_id = ?').get(req.userId);
+  const myProfile = db.prepare('SELECT random_mode_enabled, gender, preferred_gender FROM profiles WHERE user_id = ?').get(req.userId);
   if (!myProfile) {
     return res.status(400).json({ error: '请先完善个人资料' });
   }
   const now = new Date().toISOString();
   db.prepare('UPDATE profiles SET random_mode_enabled = 1, random_mode_ts = ? WHERE user_id = ?').run(now, req.userId);
 
-  const ts = new Date(now).getTime();
   const all = db.prepare(`
-    SELECT p.user_id, p.random_mode_ts, p.gender, p.preferred_gender
+    SELECT p.user_id, p.gender, p.preferred_gender
     FROM profiles p
-    WHERE p.user_id != ? AND p.random_mode_enabled = 1 AND p.random_mode_ts IS NOT NULL
+    WHERE p.user_id != ? AND p.random_mode_enabled = 1
   `).all(req.userId);
 
-  const inWindow = all.filter(row => {
-    const t = new Date(row.random_mode_ts).getTime();
-    if (Math.abs(ts - t) > RANDOM_WINDOW_MS) return false;
-    return acceptsGender(myProfile.preferred_gender, row.gender) && acceptsGender(row.preferred_gender, myProfile.gender);
-  });
+  const candidates = all.filter(row =>
+    acceptsGender(myProfile.preferred_gender, row.gender) && acceptsGender(row.preferred_gender, myProfile.gender)
+  );
 
-  if (inWindow.length === 0) {
-    return res.json({ matched: false, message: '暂无同时段匹配的用户，请稍后再试或邀请更多朋友使用' });
+  if (candidates.length === 0) {
+    return res.json({ matched: false, message: '暂无开启随机匹配且符合性别偏好的用户，请稍后再试或邀请更多朋友使用' });
   }
 
-  const partner = inWindow[Math.floor(Math.random() * inWindow.length)];
+  const partner = candidates[Math.floor(Math.random() * candidates.length)];
   const userA = Math.min(req.userId, partner.user_id);
   const userB = Math.max(req.userId, partner.user_id);
   try {
