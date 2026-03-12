@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>数据库管理</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 1rem; background: #1a1a1a; color: #e0e0e0; }
+    h1 { font-size: 1.25rem; }
+    .toolbar { margin: 1rem 0; display: flex; align-items: center; gap: 0.75rem; }
+    select { padding: 0.5rem; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 6px; }
+    button { padding: 0.5rem 1rem; background: #3a7bd5; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #2d6ac2; }
+    button.danger { background: #c0392b; }
+    button.danger:hover { background: #a93226; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+    th, td { border: 1px solid #444; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #2a2a2a; }
+    tr:hover { background: #252525; }
+    .edit-form { background: #2a2a2a; padding: 1rem; border-radius: 8px; margin: 1rem 0; max-width: 600px; }
+    .edit-form label { display: block; margin-top: 0.5rem; color: #aaa; font-size: 0.85rem; }
+    .edit-form input, .edit-form textarea { width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #444; color: #fff; border-radius: 4px; margin-top: 0.25rem; }
+    .edit-form .row { display: flex; gap: 0.5rem; margin-top: 1rem; }
+    .msg { padding: 0.5rem; margin: 0.5rem 0; border-radius: 6px; }
+    .msg.err { background: #4a2020; color: #f88; }
+    .msg.ok { background: #1a3a1a; color: #8f8; }
+    .pk { color: #7ab; }
+  </style>
+</head>
+<body>
+  <h1>数据库管理</h1>
+  <p style="color:#888;">选择表查看与编辑（仅当设置了 ADMIN_SECRET 且 URL 带 secret 时可用）</p>
+  <div class="toolbar">
+    <label>表：</label>
+    <select id="tableSelect"></select>
+    <button id="btnLoad">加载</button>
+  </div>
+  <div id="msg"></div>
+  <div id="editForm" class="edit-form" style="display:none;">
+    <h3 id="editTitle">编辑</h3>
+    <div id="editFields"></div>
+    <div class="row">
+      <button id="btnSave">保存</button>
+      <button id="btnCancelEdit">取消</button>
+    </div>
+  </div>
+  <div id="tableWrap"></div>
+
+  <script>
+    const secret = new URLSearchParams(location.search).get('secret');
+    if (!secret) {
+      document.body.innerHTML = '<h1>数据库管理</h1><p>请在 URL 后加上 <code>?secret=你的ADMIN_SECRET</code>（在 Render 环境变量中设置 ADMIN_SECRET）</p>';
+    } else {
+      const api = (path, opts = {}) => {
+        const url = path.startsWith('http') ? path : (path + (path.includes('?') ? '&' : '?') + 'secret=' + encodeURIComponent(secret));
+        return fetch(url, { ...opts, headers: { 'Content-Type': 'application/json', ...opts.headers } });
+      };
+
+      const tableSelect = document.getElementById('tableSelect');
+      const tableWrap = document.getElementById('tableWrap');
+      const editForm = document.getElementById('editForm');
+      const editFields = document.getElementById('editFields');
+      const editTitle = document.getElementById('editTitle');
+      const msg = (text, isErr) => {
+        const m = document.getElementById('msg');
+        m.className = 'msg ' + (isErr ? 'err' : 'ok');
+        m.textContent = text;
+        m.style.display = text ? 'block' : 'none';
+      };
+
+      api('/api/admin/tables').then(r => r.json()).then(data => {
+        data.tables.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t;
+          opt.textContent = t;
+          tableSelect.appendChild(opt);
+        });
+      }).catch(() => msg('无法连接 API，请确认 ADMIN_SECRET 已设置且 URL 带 ?secret=...', true));
+
+      function loadTable() {
+        const name = tableSelect.value;
+        if (!name) return;
+        api('/api/admin/table/' + name).then(r => r.json()).then(data => {
+          const pk = name === 'profiles' ? 'user_id' : 'id';
+          let html = '<table><thead><tr>';
+          data.columns.forEach(c => { html += '<th>' + c.name + (c.name === pk ? ' <span class="pk">(主键)</span>' : '') + '</th>'; });
+          html += '<th>操作</th></tr></thead><tbody>';
+          data.rows.forEach(row => {
+            html += '<tr data-row="' + JSON.stringify(row).replace(/"/g, '&quot;') + '">';
+            data.columns.forEach(c => { html += '<td>' + (row[c.name] == null ? '' : String(row[c.name]).slice(0, 80)) + '</td>'; });
+            html += '<td><button class="edit-row">编辑</button> <button class="danger delete-row">删除</button></td></tr>';
+          });
+          html += '</tbody></table>';
+          tableWrap.innerHTML = html;
+
+          tableWrap.querySelectorAll('.edit-row').forEach(btn => {
+            btn.onclick = () => {
+              const row = JSON.parse(btn.closest('tr').dataset.row);
+              editForm.style.display = 'block';
+              editTitle.textContent = '编辑 ' + name + ' · ' + pk + ' = ' + row[pk];
+              editFields.innerHTML = '';
+              const current = { [pk]: row[pk] };
+              data.columns.forEach(c => {
+                if (c.name === pk) return;
+                const label = document.createElement('label');
+                label.textContent = c.name;
+                const input = document.createElement(c.type === 'INTEGER' ? 'input' : 'textarea');
+                input.name = c.name;
+                input.value = row[c.name] == null ? '' : row[c.name];
+                if (input.tagName === 'INPUT') input.type = 'text';
+                input.rows = 2;
+                label.appendChild(input);
+                editFields.appendChild(label);
+              });
+              window._editRow = { table: name, pk, pkVal: row[pk], current };
+            };
+          });
+
+          tableWrap.querySelectorAll('.delete-row').forEach(btn => {
+            btn.onclick = () => {
+              const row = JSON.parse(btn.closest('tr').dataset.row);
+              const pk = name === 'profiles' ? 'user_id' : 'id';
+              if (!confirm('确定删除该行？')) return;
+              api('/api/admin/table/' + name + '/row/delete', { method: 'POST', body: JSON.stringify({ [pk]: row[pk] }) })
+                .then(r => r.json()).then(d => { msg(d.error || '已删除'); loadTable(); }).catch(e => msg(e.message, true));
+            };
+          });
+        }).catch(e => msg('加载失败: ' + e.message, true));
+      }
+
+      document.getElementById('btnLoad').onclick = loadTable;
+      document.getElementById('btnCancelEdit').onclick = () => { editForm.style.display = 'none'; };
+
+      document.getElementById('btnSave').onclick = () => {
+        const e = window._editRow;
+        if (!e) return;
+        const body = { [e.pk]: e.pkVal };
+        editFields.querySelectorAll('input, textarea').forEach(el => { body[el.name] = el.value; });
+        api('/api/admin/table/' + e.table + '/row', { method: 'POST', body: JSON.stringify(body) })
+          .then(r => r.json()).then(d => { msg(d.error || '已保存'); editForm.style.display = 'none'; loadTable(); }).catch(err => msg('保存失败: ' + err.message, true));
+      };
+
+      tableSelect.addEventListener('change', loadTable);
+      if (tableSelect.options.length) loadTable();
+    }
+  </script>
+</body>
+</html>

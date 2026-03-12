@@ -25,6 +25,8 @@
 
 4. 创建后会自动部署。部署完成会得到一个 `xxx.onrender.com` 的网址，用浏览器打开即可。
 
+5. **（可选）数据库管理页**：在 Render 的 **Environment** 里添加环境变量 `ADMIN_SECRET`（设为你自己的一串密文）。部署后访问 `https://你的服务.onrender.com/admin?secret=你设的ADMIN_SECRET` 即可在浏览器中查看、编辑 SQLite 数据（users、profiles、matches、messages）。
+
 **注意**：免费实例一段时间不用会休眠，唤醒较慢；磁盘不持久，SQLite 数据在重启/重新部署后会丢失，适合演示或短期使用。
 
 ---

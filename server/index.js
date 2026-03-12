@@ -2,10 +2,12 @@ import express from 'express';
 import cors from 'cors';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { readFileSync } from 'fs';
 import authRoutes from './routes/auth.js';
 import profileRoutes from './routes/profile.js';
 import matchRoutes from './routes/match.js';
 import chatRoutes from './routes/chat.js';
+import adminRoutes from './routes/admin.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -18,6 +20,13 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/match', matchRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/admin', adminRoutes);
+
+// 数据库管理页：仅当 URL 带 ?secret=ADMIN_SECRET 时可用
+app.get('/admin', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(readFileSync(join(__dirname, 'admin.html'), 'utf-8'));
+});
 
 // 若已构建前端则托管静态文件（便于单机部署）
 const distPath = join(__dirname, '../client/dist');
