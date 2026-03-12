@@ -18,6 +18,7 @@
     th, td { border: 1px solid #444; padding: 0.5rem 0.75rem; text-align: left; }
     th { background: #2a2a2a; }
     tr:hover { background: #252525; }
+    td { max-width: 320px; overflow-x: auto; word-break: break-all; white-space: pre-wrap; vertical-align: top; }
     .edit-form { background: #2a2a2a; padding: 1rem; border-radius: 8px; margin: 1rem 0; max-width: 600px; }
     .edit-form label { display: block; margin-top: 0.5rem; color: #aaa; font-size: 0.85rem; }
     .edit-form input, .edit-form textarea { width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #444; color: #fff; border-radius: 4px; margin-top: 0.25rem; }
@@ -62,6 +63,11 @@
       const editForm = document.getElementById('editForm');
       const editFields = document.getElementById('editFields');
       const editTitle = document.getElementById('editTitle');
+      const escapeHtml = (s) => {
+        const div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+      };
       const msg = (text, isErr) => {
         const m = document.getElementById('msg');
         m.className = 'msg ' + (isErr ? 'err' : 'ok');
@@ -88,7 +94,7 @@
           html += '<th>操作</th></tr></thead><tbody>';
           data.rows.forEach(row => {
             html += '<tr data-row="' + JSON.stringify(row).replace(/"/g, '&quot;') + '">';
-            data.columns.forEach(c => { html += '<td>' + (row[c.name] == null ? '' : String(row[c.name]).slice(0, 80)) + '</td>'; });
+            data.columns.forEach(c => { html += '<td>' + (row[c.name] == null ? '' : escapeHtml(String(row[c.name]))) + '</td>'; });
             html += '<td><button class="edit-row">编辑</button> <button class="danger delete-row">删除</button></td></tr>';
           });
           html += '</tbody></table>';
@@ -96,24 +102,27 @@
 
           tableWrap.querySelectorAll('.edit-row').forEach(btn => {
             btn.onclick = () => {
-              const row = JSON.parse(btn.closest('tr').dataset.row);
-              editForm.style.display = 'block';
-              editTitle.textContent = '编辑 ' + name + ' · ' + pk + ' = ' + row[pk];
+              const listRow = JSON.parse(btn.closest('tr').dataset.row);
+              const pkVal = listRow[pk];
+              editTitle.textContent = '加载中…';
               editFields.innerHTML = '';
-              const current = { [pk]: row[pk] };
-              data.columns.forEach(c => {
-                if (c.name === pk) return;
-                const label = document.createElement('label');
-                label.textContent = c.name;
-                const input = document.createElement(c.type === 'INTEGER' ? 'input' : 'textarea');
-                input.name = c.name;
-                input.value = row[c.name] == null ? '' : row[c.name];
-                if (input.tagName === 'INPUT') input.type = 'text';
-                input.rows = 2;
-                label.appendChild(input);
-                editFields.appendChild(label);
-              });
-              window._editRow = { table: name, pk, pkVal: row[pk], current };
+              editForm.style.display = 'block';
+              api('/api/admin/table/' + name + '/row/' + encodeURIComponent(pkVal)).then(r => r.json()).then(row => {
+                editTitle.textContent = '编辑 ' + name + ' · ' + pk + ' = ' + pkVal;
+                data.columns.forEach(c => {
+                  if (c.name === pk) return;
+                  const label = document.createElement('label');
+                  label.textContent = c.name;
+                  const input = document.createElement(c.type === 'INTEGER' ? 'input' : 'textarea');
+                  input.name = c.name;
+                  input.value = row[c.name] == null ? '' : row[c.name];
+                  if (input.tagName === 'INPUT') input.type = 'text';
+                  input.rows = (c.name === 'intro' || c.name === 'photos' || c.name === 'avatar') ? 4 : 2;
+                  label.appendChild(input);
+                  editFields.appendChild(label);
+                });
+                window._editRow = { table: name, pk, pkVal, current: row };
+              }).catch(e => { msg('加载该行失败: ' + e.message, true); editForm.style.display = 'none'; });
             };
           });
 

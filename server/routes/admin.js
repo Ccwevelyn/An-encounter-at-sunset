@@ -28,7 +28,24 @@ router.get('/tables', (req, res) => {
   res.json({ tables: ALLOWED_TABLES });
 });
 
-// 表结构 + 数据
+// 列表用：大字段用占位符，避免响应过大导致只看到部分用户
+const LIST_PLACEHOLDERS = {
+  users: { password_hash: '[已隐藏]' },
+  profiles: { avatar: '[图片]', photos: '[图片]', intro: '[简介]' },
+};
+function rowForList(name, row) {
+  const placeholders = LIST_PLACEHOLDERS[name];
+  if (!placeholders) return row;
+  const out = { ...row };
+  for (const [col, placeholder] of Object.entries(placeholders)) {
+    const val = out[col];
+    if (val != null && String(val).length > 50) out[col] = placeholder;
+    if (col === 'intro' && val != null && String(val).length > 0) out[col] = placeholder;
+  }
+  return out;
+}
+
+// 表结构 + 数据（列表：不含大图/密码全文）
 router.get('/table/:name', (req, res) => {
   const name = req.params.name;
   if (!ALLOWED_TABLES.includes(name)) {
@@ -37,7 +54,25 @@ router.get('/table/:name', (req, res) => {
   try {
     const columns = db.prepare(`PRAGMA table_info(${name})`).all();
     const rows = db.prepare(`SELECT * FROM ${name}`).all();
-    res.json({ columns: columns.map((c) => ({ name: c.name, type: c.type })), rows });
+    const rowsForList = rows.map((r) => rowForList(name, r));
+    res.json({ columns: columns.map((c) => ({ name: c.name, type: c.type })), rows: rowsForList });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 单行完整数据（编辑用）
+router.get('/table/:name/row/:pkVal', (req, res) => {
+  const name = req.params.name;
+  const pkVal = req.params.pkVal;
+  if (!ALLOWED_TABLES.includes(name)) {
+    return res.status(400).json({ error: 'Invalid table' });
+  }
+  const pk = PK_COL[name];
+  try {
+    const row = db.prepare(`SELECT * FROM ${name} WHERE ${pk} = ?`).get(pkVal);
+    if (!row) return res.status(404).json({ error: 'Not found' });
+    res.json(row);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
