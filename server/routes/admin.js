@@ -20,6 +20,7 @@ router.use((req, res, next) => {
   if (!checkSecret(req)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   next();
 });
 

@@ -32,6 +32,7 @@
 <body>
   <h1>数据库管理</h1>
   <p style="color:#888;">选择表查看与编辑（仅当设置了 ADMIN_SECRET 且 URL 带 secret 时可用）</p>
+  <p style="color:#b8860b; margin: 0.5rem 0;"><strong>重要：</strong>请用 <strong>与用户访问的同一网址</strong> 打开本页（例如线上为 <code>https://你的服务.onrender.com/admin?secret=...</code>）。若用 localhost 打开，看到的是本机数据库，不是线上用户提交的数据；在本地删除不会影响线上数据。</p>
   <div class="toolbar">
     <label>表：</label>
     <select id="tableSelect"></select>
@@ -55,7 +56,7 @@
     } else {
       const api = (path, opts = {}) => {
         const url = path.startsWith('http') ? path : (path + (path.includes('?') ? '&' : '?') + 'secret=' + encodeURIComponent(secret));
-        return fetch(url, { ...opts, headers: { 'Content-Type': 'application/json', ...opts.headers } });
+        return fetch(url, { cache: 'no-store', ...opts, headers: { 'Content-Type': 'application/json', ...opts.headers } });
       };
 
       const tableSelect = document.getElementById('tableSelect');
@@ -132,7 +133,9 @@
               const pk = name === 'profiles' ? 'user_id' : 'id';
               if (!confirm('确定删除该行？')) return;
               api('/api/admin/table/' + name + '/row/delete', { method: 'POST', body: JSON.stringify({ [pk]: row[pk] }) })
-                .then(r => r.json()).then(d => { msg(d.error || '已删除'); loadTable(); }).catch(e => msg(e.message, true));
+                .then(r => r.json().then(d => ({ ok: r.ok, body: d })))
+                .then(({ ok, body }) => { if (ok) { msg('已删除'); loadTable(); } else { msg(body?.error || '删除失败', true); } })
+                .catch(e => msg('删除失败: ' + (e.message || e), true));
             };
           });
         }).catch(e => msg('加载失败: ' + e.message, true));
