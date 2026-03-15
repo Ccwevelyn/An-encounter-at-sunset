@@ -33,7 +33,9 @@ export default function Soul() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const list = questions.map((q) => ({ questionId: q.id, answer: (answers[q.id] ?? '').trim() })).filter((a) => a.answer.length > 0);
+    const list = questions
+      .map((q) => ({ questionId: Number(q.id), answer: String(answers[q.id] ?? '').trim() }))
+      .filter((a) => a.answer.length > 0);
     if (list.length === 0) {
       setMsg('请至少回答一题后再提交');
       return;
@@ -44,7 +46,7 @@ export default function Soul() {
       await submitSoulAnswers(list);
       setMsg('已保存，可以回主页进行灵魂共鸣匹配。');
     } catch (err) {
-      setMsg(err.message || '提交失败，请检查网络或重新登录');
+      setMsg(err?.message || '提交失败，请检查网络或重新登录');
     } finally {
       setSaving(false);
     }

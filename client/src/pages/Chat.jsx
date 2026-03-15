@@ -94,7 +94,8 @@ export default function Chat({ user }) {
       <ul className="chat-page__list" ref={listRef}>
         {messages.map((msg) => {
           const sid = Number(msg.sender_id);
-          const isMine = sid === Number(user?.id) && !BOT_SENDER_IDS.includes(sid);
+          const myId = Number(user?.id);
+          const isMine = myId != null && myId === sid && !BOT_SENDER_IDS.includes(sid);
           return (
           <li
             key={msg.id}

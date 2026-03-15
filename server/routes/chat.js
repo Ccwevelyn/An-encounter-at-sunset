@@ -102,10 +102,12 @@ router.post('/:partnerId', async (req, res) => {
     if (!botChatStore.has(key)) botChatStore.set(key, { messages: [] });
     const store = botChatStore.get(key);
     const now = new Date().toISOString();
-    const userMsg = { id: store.messages.length + 1, match_id: 0, sender_id: req.userId, content: String(content).trim(), created_at: now };
+    const uid = Number(req.userId);
+    const pid = Number(partnerId);
+    const userMsg = { id: store.messages.length + 1, match_id: 0, sender_id: uid, content: String(content).trim(), created_at: now };
     store.messages.push(userMsg);
     const botContent = await getBotReply(partnerId, content);
-    const botMsg = { id: store.messages.length + 1, match_id: 0, sender_id: partnerId, content: botContent, created_at: now };
+    const botMsg = { id: store.messages.length + 1, match_id: 0, sender_id: pid, content: botContent, created_at: now };
     store.messages.push(botMsg);
     return res.json({ message: userMsg, botMessage: botMsg });
   }

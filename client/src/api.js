@@ -86,10 +86,10 @@ export async function submitSoulAnswers(answers) {
   const res = await fetch(`${API}/match/soul/answers`, {
     method: 'POST',
     headers: getHeaders(),
-    body: JSON.stringify({ answers }),
+    body: JSON.stringify({ answers: Array.isArray(answers) ? answers : [] }),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || '提交失败');
+  if (!res.ok) throw new Error(data.error || (res.status === 401 ? '请重新登录' : '提交失败'));
   return data;
 }
 

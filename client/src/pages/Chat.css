@@ -75,10 +75,12 @@
   flex-direction: column;
   align-items: flex-start;
   max-width: 80%;
+  width: fit-content;
 }
 
 .chat-page__msg.mine {
   align-self: flex-end;
+  margin-left: auto;
   align-items: flex-end;
 }
 
