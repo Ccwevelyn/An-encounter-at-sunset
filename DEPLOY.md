@@ -29,6 +29,10 @@
 
 **注意**：免费实例一段时间不用会休眠，唤醒较慢；磁盘不持久，SQLite 数据在重启/重新部署后会丢失，适合演示或短期使用。
 
+**在 Render 上如何查看数据库**：
+- **当前用 SQLite 时**：在 Environment 里配置好 `ADMIN_SECRET` 后，浏览器访问 `https://你的服务.onrender.com/admin?secret=你设的ADMIN_SECRET`，即可在页面上查看、编辑 users、profiles、matches、messages 等表。
+- **若改用 PostgreSQL**：在 Render Dashboard 进入你的 **Project** → 左侧点击该 **PostgreSQL** 实例 → 在 **Info** 里可见 **Internal Database URL**（服务内网用）和 **External Database URL**（本机连用）。用本机 DBeaver、TablePlus、或命令行 `psql "External Database URL"` 即可连接查看表和数据。
+
 ---
 
 ## 方式二：Railway（付费，试用后约 $5/月）

@@ -39,8 +39,9 @@ export async function sendLoginCodeEmail(to, code) {
     `,
   });
   if (error) {
-    console.error('[Resend] 发送失败:', error);
-    return { ok: false, error: error.message };
+    const msg = typeof error === 'object' && error !== null && 'message' in error ? error.message : String(error);
+    console.error('[Resend] 登录验证码发送失败:', { to, error: error, message: msg });
+    return { ok: false, error: msg };
   }
   return { ok: true };
 }
@@ -68,8 +69,9 @@ export async function sendRegisterCodeEmail(to, code) {
     `,
   });
   if (error) {
-    console.error('[Resend] 发送失败:', error);
-    return { ok: false, error: error.message };
+    const msg = typeof error === 'object' && error !== null && 'message' in error ? error.message : String(error);
+    console.error('[Resend] 注册验证码发送失败:', { to, error: error, message: msg });
+    return { ok: false, error: msg };
   }
   return { ok: true };
 }

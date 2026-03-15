@@ -10,13 +10,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const dbPath = join(__dirname, 'data.db');
 const db = new Database(dbPath);
 
-// 按外键依赖顺序清空（先子表后主表）
-db.exec(`
-  DELETE FROM messages;
-  DELETE FROM matches;
-  DELETE FROM profiles;
-  DELETE FROM users;
-`);
+// 按外键依赖顺序清空（先子表后主表）；若某表不存在则跳过
+const tables = ['messages', 'matches', 'soul_answers', 'profiles', 'login_codes', 'email_verifications', 'users'];
+for (const t of tables) {
+  try {
+    db.prepare(`DELETE FROM ${t}`).run();
+  } catch (e) {
+    if (!e.message.includes('no such table')) throw e;
+  }
+}
 
 // 重置自增序列
 db.exec(`DELETE FROM sqlite_sequence WHERE name IN ('users', 'profiles', 'matches', 'messages');`);
