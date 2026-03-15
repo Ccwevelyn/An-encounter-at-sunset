@@ -103,4 +103,4 @@
 ## 技术栈
 
 - 前端：React 18、React Router、Vite  
-- 后端：Node.js、Express、SQLite / PostgreSQL、Resend（验证码邮件）、DeepSeek API（可选）
+- 后端：Node.js、Express、SQLite / PostgreSQL、DeepSeek API（可选）

@@ -3,10 +3,14 @@
  */
 import pg from 'pg';
 
-const url = process.env.DATABASE_URL;
+let url = process.env.DATABASE_URL;
+// 统一为 verify-full，避免 pg 控制台 SSL 模式警告
+if (url) {
+  url = url.replace(/\bsslmode=[^&]+/i, 'sslmode=verify-full');
+  if (!url.includes('sslmode=')) url += (url.includes('?') ? '&' : '?') + 'sslmode=verify-full';
+}
 const pool = new pg.Pool({
   connectionString: url,
-  // 免费云 Postgres（Neon/Supabase/Render 等）均需 SSL
   ssl: url ? { rejectUnauthorized: false } : false,
 });
 
