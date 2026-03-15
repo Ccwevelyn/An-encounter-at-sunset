@@ -22,6 +22,7 @@
    - **Start Command**：`npm run start`
    - **Instance Type**：选 **Free**
    - 若出现 `better-sqlite3` / `invalid ELF header`，请确认**未**把 `server/node_modules` 提交到仓库，且 Build Command 为 `npm run install:all`，让依赖在 Linux 上重新安装。
+   - **修改前端后**：在本地执行 `npm run build`，把生成的 `client/dist` 一并提交并 push，线上重新部署后才会看到新页面。
 
 4. 创建后会自动部署。部署完成会得到一个 `xxx.onrender.com` 的网址，用浏览器打开即可。
 
