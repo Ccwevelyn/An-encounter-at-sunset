@@ -33,9 +33,9 @@ export default function Soul() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const list = questions.map((q) => ({ questionId: q.id, answer: answers[q.id]?.trim() || '' })).filter((a) => a.answer);
+    const list = questions.map((q) => ({ questionId: q.id, answer: (answers[q.id] ?? '').trim() })).filter((a) => a.answer.length > 0);
     if (list.length === 0) {
-      setMsg('请至少回答一题');
+      setMsg('请至少回答一题后再提交');
       return;
     }
     setSaving(true);
@@ -44,7 +44,7 @@ export default function Soul() {
       await submitSoulAnswers(list);
       setMsg('已保存，可以回主页进行灵魂共鸣匹配。');
     } catch (err) {
-      setMsg(err.message || '提交失败');
+      setMsg(err.message || '提交失败，请检查网络或重新登录');
     } finally {
       setSaving(false);
     }
@@ -79,52 +79,53 @@ export default function Soul() {
         <span className="home__title">灵魂共鸣 · {step + 1}/{total}</span>
       </header>
       <main className="home__main" style={{ maxWidth: '32rem', margin: '0 auto' }}>
-        <div className="home__mode-card soul-step">
-          {current && (
-            <>
-              <p className="soul-step__progress" aria-hidden>
-                第 {step + 1} 题，共 {total} 题
-              </p>
-              <h2 className="soul-step__question">{current.question}</h2>
-              <textarea
-                className="soul-step__textarea"
-                value={answers[current.id] ?? ''}
-                onChange={(e) => setAnswers((a) => ({ ...a, [current.id]: e.target.value }))}
-                rows={4}
-                placeholder="写下你的想法…"
-              />
-            </>
-          )}
-        </div>
+        <form onSubmit={handleSubmit} className="soul-step__form">
+          <div className="home__mode-card soul-step">
+            {current && (
+              <>
+                <p className="soul-step__progress" aria-hidden>
+                  第 {step + 1} 题，共 {total} 题
+                </p>
+                <h2 className="soul-step__question">{current.question}</h2>
+                <textarea
+                  className="soul-step__textarea"
+                  value={answers[current.id] ?? ''}
+                  onChange={(e) => setAnswers((a) => ({ ...a, [current.id]: e.target.value }))}
+                  rows={4}
+                  placeholder="写下你的想法…"
+                />
+              </>
+            )}
+          </div>
 
-        <div className="soul-step__nav">
-          <button
-            type="button"
-            className="home__complete-btn soul-step__btn"
-            onClick={handlePrev}
-            disabled={isFirst}
-          >
-            上一题
-          </button>
-          {!isLast ? (
+          <div className="soul-step__nav">
             <button
               type="button"
-              className="soul-step__btn soul-step__btn--primary"
-              onClick={handleNext}
+              className="home__complete-btn soul-step__btn"
+              onClick={handlePrev}
+              disabled={isFirst}
             >
-              下一题
+              上一题
             </button>
-          ) : (
-            <button
-              type="button"
-              className="soul-step__btn soul-step__btn--primary"
-              onClick={handleSubmit}
-              disabled={saving}
-            >
-              {saving ? '保存中…' : '保存答案'}
-            </button>
-          )}
-        </div>
+            {!isLast ? (
+              <button
+                type="button"
+                className="soul-step__btn soul-step__btn--primary"
+                onClick={handleNext}
+              >
+                下一题
+              </button>
+            ) : (
+              <button
+                type="submit"
+                className="soul-step__btn soul-step__btn--primary"
+                disabled={saving}
+              >
+                {saving ? '保存中…' : '保存答案'}
+              </button>
+            )}
+          </div>
+        </form>
 
         {msg && <p className="home__error" style={{ marginTop: '1rem' }}>{msg}</p>}
       </main>

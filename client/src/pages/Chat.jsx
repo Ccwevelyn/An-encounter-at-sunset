@@ -4,6 +4,7 @@ import { getOtherProfile, getMessages, sendMessage } from '../api';
 import './Chat.css';
 
 const BOT_IDS = ['0', '1', '2'];
+const BOT_SENDER_IDS = [0, 1, 2]; // 消息里 sender_id 为 0/1/2 的为 AI，不显示在右侧
 const BOT_NAMES = { '0': '最伟大最尊敬的导师', '1': '看不上你对象的朋友', '2': '知心姐姐' };
 
 export default function Chat({ user }) {
@@ -91,17 +92,21 @@ export default function Chat({ user }) {
       </header>
 
       <ul className="chat-page__list" ref={listRef}>
-        {messages.map((msg) => (
+        {messages.map((msg) => {
+          const sid = Number(msg.sender_id);
+          const isMine = sid === Number(user?.id) && !BOT_SENDER_IDS.includes(sid);
+          return (
           <li
             key={msg.id}
-            className={`chat-page__msg ${msg.sender_id === user?.id ? 'mine' : ''}`}
+            className={`chat-page__msg ${isMine ? 'mine' : ''}`}
           >
             <span className="chat-page__msg-content">{msg.content}</span>
             <span className="chat-page__msg-time">
               {msg.created_at ? new Date(msg.created_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : ''}
             </span>
           </li>
-        ))}
+          );
+        })}
       </ul>
 
       <form className="chat-page__form" onSubmit={handleSend}>
