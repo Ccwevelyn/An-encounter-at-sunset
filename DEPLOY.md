@@ -25,13 +25,26 @@
 
 4. 创建后会自动部署。部署完成会得到一个 `xxx.onrender.com` 的网址，用浏览器打开即可。
 
-5. **（可选）数据库管理页**：在 Render 的 **Environment** 里添加环境变量 `ADMIN_SECRET`（设为你自己的一串密文）。部署后访问 `https://你的服务.onrender.com/admin?secret=你设的ADMIN_SECRET` 即可在浏览器中查看、编辑 SQLite 数据（users、profiles、matches、messages）。
+5. **（可选）数据库管理页**：在 Render 的 **Environment** 里添加环境变量 `ADMIN_SECRET`（设为你自己的一串密文）。部署后访问 `https://你的服务.onrender.com/admin?secret=你设的ADMIN_SECRET` 即可在浏览器中查看、编辑数据（users、profiles、matches、messages）。
 
-**注意**：免费实例一段时间不用会休眠，唤醒较慢；磁盘不持久，SQLite 数据在重启/重新部署后会丢失，适合演示或短期使用。
+6. **让数据不丢失（免费 PostgreSQL）**：  
+   Render 免费实例磁盘不持久，用 SQLite 时重启/重新部署后数据会清空。只要接一个**免费云数据库**，数据就会持久保存，无需付费。
+
+   **推荐：Neon（免费、免信用卡）**
+   - 打开 [neon.tech](https://neon.tech)，用 GitHub 登录 → **New Project** → 起个名字 → 创建。
+   - 在项目里点 **Connection string**，复制整串（形如 `postgresql://user:pass@ep-xxx.region.aws.neon.tech/neondb?sslmode=require`）。
+   - 在 Render 的 **Dashboard** → 你的 Web Service → **Environment** → **Add Environment Variable**：
+     - Key：`DATABASE_URL`
+     - Value：粘贴刚才复制的连接串。
+   - 保存后 Render 会自动重新部署。部署完成后，数据会存在 Neon，**重启或再次部署都不会丢数据**。
+
+   **备选**： [Supabase](https://supabase.com) 免费版也提供 PostgreSQL，在 Project Settings → Database 里可拿到连接串，同样把 `DATABASE_URL` 填到 Render 的 Environment 即可。
+
+**注意**：免费实例一段时间不用会休眠，唤醒较慢；接上 Neon/Supabase 后数据在云端，不受影响。
 
 **在 Render 上如何查看数据库**：
-- **当前用 SQLite 时**：在 Environment 里配置好 `ADMIN_SECRET` 后，浏览器访问 `https://你的服务.onrender.com/admin?secret=你设的ADMIN_SECRET`，即可在页面上查看、编辑 users、profiles、matches、messages 等表。
-- **若改用 PostgreSQL**：在 Render Dashboard 进入你的 **Project** → 左侧点击该 **PostgreSQL** 实例 → 在 **Info** 里可见 **Internal Database URL**（服务内网用）和 **External Database URL**（本机连用）。用本机 DBeaver、TablePlus、或命令行 `psql "External Database URL"` 即可连接查看表和数据。
+- **用本项目的 admin 页（推荐）**：在 Environment 里配置好 `ADMIN_SECRET` 后，访问 `https://你的服务.onrender.com/admin?secret=你设的ADMIN_SECRET`，即可在页面上查看、编辑 users、profiles、matches、messages 等表（无论 SQLite 还是 PostgreSQL 都支持）。
+- **用 Neon 时**：在 [Neon Console](https://console.neon.tech) 进入你的项目 → **SQL Editor** 可直接查表、跑 SQL；或在本机用 DBeaver/TablePlus，用同一份 `DATABASE_URL` 连接串连接即可。
 
 ---
 
@@ -97,6 +110,6 @@ Railway 目前**没有长期免费套餐**，只有约 30 天试用（含 $5 额
 |------|------|
 | 打开网址白屏 / 404 | 确认 **Build Command** 包含 `npm run build`，且 **Start Command** 是 `npm run start`（会先 build 再起服务）。 |
 | 接口 404 / 跨域 | 前端已用相对路径 `/api`，同一域名下无需改配置。 |
-| 重新部署后数据没了 | Render 免费版不持久化磁盘；要长期存数据请用自有服务器或 Railway 付费 + Volume。 |
+| 重新部署后数据没了 | 按上文第 6 步接 **Neon 免费 PostgreSQL**，把 `DATABASE_URL` 填到 Render 的 Environment，数据即持久保存。 |
 
 按上面任选一种方式部署后，即可用生成的网址在浏览器中打开页面。

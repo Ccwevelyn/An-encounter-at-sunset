@@ -3,9 +3,11 @@
  */
 import pg from 'pg';
 
+const url = process.env.DATABASE_URL;
 const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.startsWith('postgres://') && process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  connectionString: url,
+  // 免费云 Postgres（Neon/Supabase/Render 等）均需 SSL
+  ssl: url ? { rejectUnauthorized: false } : false,
 });
 
 function convertQuestionToDollar(sql) {
