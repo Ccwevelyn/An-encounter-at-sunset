@@ -77,6 +77,7 @@ async function runMigrations() {
         question TEXT NOT NULL,
         sort_order INTEGER DEFAULT 0
       );
+      /* soul_answers 无 id 列，主键 (user_id, question_id)；INSERT 时 db.js 使用 RETURNING user_id */
       CREATE TABLE IF NOT EXISTS soul_answers (
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         question_id INTEGER NOT NULL REFERENCES soul_questions(id),

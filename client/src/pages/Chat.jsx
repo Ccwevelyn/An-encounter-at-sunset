@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getOtherProfile, getMessages, sendMessage } from '../api';
+import mentorAvatar from '../assets/mentor-avatar.png';
 import './Chat.css';
 
 const BOT_IDS = ['0', '1', '2'];
-const BOT_SENDER_IDS = [0, 1, 2]; // 消息里 sender_id 为 0/1/2 的为 AI，不显示在右侧
+const BOT_SENDER_IDS = [0, 1, 2]; // 消息里 sender_id 为 0/1/2 的为 AI，显示在左侧
 const BOT_NAMES = { '0': '最伟大最尊敬的导师', '1': '看不上你对象的朋友', '2': '知心姐姐' };
+const BOT_AVATAR = { '0': mentorAvatar };
 
 export default function Chat({ user }) {
   const { partnerId } = useParams();
@@ -81,6 +83,8 @@ export default function Chat({ user }) {
         <div className="chat-page__title-wrap">
           {partner?.profile?.avatar ? (
             <img src={partner.profile.avatar} alt="" className="chat-page__avatar" />
+          ) : BOT_AVATAR[partnerId] ? (
+            <img src={BOT_AVATAR[partnerId]} alt="" className="chat-page__avatar" />
           ) : (
             <span className="chat-page__avatar-placeholder" />
           )}
@@ -94,18 +98,19 @@ export default function Chat({ user }) {
       <ul className="chat-page__list" ref={listRef}>
         {messages.map((msg) => {
           const sid = msg.sender_id != null ? Number(msg.sender_id) : NaN;
-          const myId = user?.id != null ? Number(user.id) : NaN;
-          const isBotMsg = BOT_SENDER_IDS.includes(sid);
-          const isMine = !isBotMsg && !Number.isNaN(myId) && myId === sid;
+          const myId = Number(user?.id ?? user?.userId ?? 0);
+          const isMine = myId > 0 && myId === sid && !BOT_SENDER_IDS.includes(sid);
           return (
           <li
             key={`${msg.id}-${msg.created_at || ''}`}
             className={`chat-page__msg ${isMine ? 'mine' : ''}`}
           >
-            <span className="chat-page__msg-content">{msg.content}</span>
-            <span className="chat-page__msg-time">
-              {msg.created_at ? new Date(msg.created_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : ''}
-            </span>
+            <div className="chat-page__bubble">
+              <span className="chat-page__msg-content">{msg.content}</span>
+              <span className="chat-page__msg-time">
+                {msg.created_at ? new Date(msg.created_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : ''}
+              </span>
+            </div>
           </li>
           );
         })}

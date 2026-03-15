@@ -72,11 +72,21 @@ async function getMatchId(userId, partnerId) {
   return row?.id ?? null;
 }
 
+// 导师（partnerId 0）首次打开时的默认第一句，必须为此句
+const BOT_FIRST_MSG = {
+  0: { id: 0, match_id: 0, sender_id: 0, content: 'hello,我是王哥', created_at: new Date().toISOString() },
+};
+
 router.get('/:partnerId', async (req, res) => {
   const partnerId = parseInt(req.params.partnerId, 10);
   if (isBot(partnerId)) {
     const key = storeKey(req.userId, partnerId);
     const list = botChatStore.get(key)?.messages ?? [];
+    // 导师(0)：无历史时先返回首句「hello,我是王哥」
+    if (partnerId === 0 && list.length === 0) {
+      return res.json({ messages: [BOT_FIRST_MSG[0]] });
+    }
+    if (list.length === 0) return res.json({ messages: [] });
     return res.json({ messages: list });
   }
   const matchId = await getMatchId(req.userId, partnerId);
@@ -115,8 +125,8 @@ router.post('/:partnerId', async (req, res) => {
   if (!matchId) {
     return res.status(404).json({ error: '未与该用户匹配' });
   }
-  await db.prepare('INSERT INTO messages (match_id, sender_id, content) VALUES (?, ?, ?)').run(matchId, req.userId, String(content).trim());
-  const row = await db.prepare('SELECT id, match_id, sender_id, content, created_at FROM messages ORDER BY id DESC LIMIT 1').get();
+  const result = await db.prepare('INSERT INTO messages (match_id, sender_id, content) VALUES (?, ?, ?)').run(matchId, req.userId, String(content).trim());
+  const row = await db.prepare('SELECT id, match_id, sender_id, content, created_at FROM messages WHERE id = ?').get(result.lastInsertRowid);
   res.json({ message: row });
 });
 

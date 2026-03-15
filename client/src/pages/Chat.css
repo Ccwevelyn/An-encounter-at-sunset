@@ -74,21 +74,22 @@
 
 .chat-page__msg {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  max-width: 80%;
-  width: fit-content;
+  width: 100%;
+  justify-content: flex-start;
 }
 
 .chat-page__msg.mine {
-  align-self: flex-end;
-  margin-left: auto;
-  margin-right: 0;
-  align-items: flex-end;
+  justify-content: flex-end;
 }
 
-.chat-page__list .chat-page__msg.mine {
+.chat-page__bubble {
+  display: inline-flex;
   flex-direction: column;
+  align-items: flex-start;
+  max-width: 85%;
+}
+
+.chat-page__msg.mine .chat-page__bubble {
   align-items: flex-end;
 }
 

@@ -1,5 +1,6 @@
 /**
  * 清空数据库所有数据（保留表结构），自增 ID 从 1 重新开始。
+ * 仅支持 SQLite（data.db）。若使用 PostgreSQL（DATABASE_URL），请在 PG 端用 TRUNCATE 或 DELETE 清表。
  * 用法：先停止后端服务，再在项目根目录执行：node server/clear-db.js
  */
 import Database from 'better-sqlite3';
@@ -21,7 +22,7 @@ for (const t of tables) {
 }
 
 // 重置自增序列
-db.exec(`DELETE FROM sqlite_sequence WHERE name IN ('users', 'profiles', 'matches', 'messages');`);
+db.exec(`DELETE FROM sqlite_sequence WHERE name IN ('users', 'profiles', 'matches', 'messages', 'soul_questions');`);
 
 // 压缩数据库文件，彻底释放空间
 db.exec(`VACUUM;`);

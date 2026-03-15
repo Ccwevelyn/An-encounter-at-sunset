@@ -25,7 +25,10 @@ if (process.env.DATABASE_URL) {
       const hasReturning = /RETURNING\s+/i.test(sql);
       let finalSql = sql;
       if (isInsert && !hasReturning) {
-        const returningCol = /\bINTO\s+profiles\s+/i.test(sql) ? 'user_id' : 'id';
+        let returningCol = 'id';
+        if (/\bINTO\s+profiles\s+/i.test(sql)) returningCol = 'user_id';
+        else if (/\bINTO\s+soul_answers\s+/i.test(sql)) returningCol = 'user_id';
+        else if (/\bINTO\s+(?:email_verifications|login_codes)\s+/i.test(sql)) returningCol = 'email'; // 主键为 email，无 id
         finalSql = sql.replace(/;\s*$/, '') + ` RETURNING ${returningCol}`;
       }
       return {
@@ -33,7 +36,7 @@ if (process.env.DATABASE_URL) {
         all: (...params) => pool.query(convert(finalSql), params).then(r => r.rows),
         run: (...params) =>
           pool.query(convert(finalSql), params).then(r => ({
-            lastInsertRowid: r.rows[0]?.id ?? r.rows[0]?.user_id,
+            lastInsertRowid: r.rows[0]?.id ?? r.rows[0]?.user_id ?? r.rows[0]?.email,
           })),
       };
     },
