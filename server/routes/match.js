@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
+import { callDeepSeek } from '../deepseek.js';
 
 const router = Router();
 router.use(authMiddleware);
@@ -278,7 +279,56 @@ router.post('/soul', async (req, res) => {
   if (candidates.length === 0) {
     return res.status(200).json({ matched: false, error: '暂无灵魂共鸣候选，先填写主观题或邀请更多人参与' });
   }
-  const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+
+  const questions = await db.prepare('SELECT id, question, sort_order FROM soul_questions ORDER BY sort_order, id').all();
+  const myAnswers = await db.prepare('SELECT question_id, answer FROM soul_answers WHERE user_id = ?').all(req.userId);
+  const myMap = Object.fromEntries(myAnswers.map((r) => [r.question_id, r.answer || '']));
+
+  function formatQA(answersMap) {
+    return questions
+      .map((q) => `Q${q.id}: ${q.question}\nA: ${answersMap[q.id] ?? '（未答）'}`)
+      .join('\n\n');
+  }
+
+  let chosen = candidates[Math.floor(Math.random() * candidates.length)];
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  if (apiKey && candidates.length > 0) {
+    const cap = 15;
+    const toRank = candidates.slice(0, cap);
+    const myBlock = `【我的回答】\n${formatQA(myMap)}`;
+    const blocks = await Promise.all(
+      toRank.map(async (c) => {
+        const rows = await db.prepare('SELECT question_id, answer FROM soul_answers WHERE user_id = ?').all(c.user_id);
+        const cMap = Object.fromEntries(rows.map((r) => [r.question_id, r.answer || '']));
+        return `【候选人 user_id=${c.user_id}】\n${formatQA(cMap)}`;
+      })
+    );
+    const candidateBlocks = blocks.join('\n\n');
+    const prompt = `你是一个恋爱观契合度助手。根据下列灵魂共鸣题的回答，对「我」与每位候选人的契合度从高到低排序。
+仅输出一个 JSON 数组，为排序后的 user_id，例如 [7, 5, 12]。不要输出任何其他文字。
+
+${myBlock}
+
+${candidateBlocks}`;
+    const ai = await callDeepSeek([{ role: 'user', content: prompt }], { max_tokens: 200, temperature: 0.2 });
+    if (ai) {
+      const raw = ai.replace(/[\s\S]*?(\[[\d,\s]*\])[\s\S]*/, '$1').trim();
+      try {
+        const order = JSON.parse(raw);
+        if (Array.isArray(order) && order.length > 0) {
+          const idSet = new Set(toRank.map((c) => c.user_id));
+          const valid = order.filter((id) => idSet.has(Number(id)));
+          if (valid.length > 0) {
+            const top = valid.slice(0, 3);
+            const pickId = top[Math.floor(Math.random() * top.length)];
+            const found = candidates.find((c) => c.user_id === pickId);
+            if (found) chosen = found;
+          }
+        }
+      } catch (_) {}
+    }
+  }
+
   const userA = Math.min(req.userId, chosen.user_id);
   const userB = Math.max(req.userId, chosen.user_id);
   try {
