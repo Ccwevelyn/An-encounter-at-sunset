@@ -79,29 +79,15 @@ router.post('/send-register-code', async (req, res) => {
   res.json(payload);
 });
 
+// 注册：仅邮箱 + 昵称 + 密码，无需验证码
 router.post('/register', async (req, res) => {
-  const { email, nickname, password, code } = req.body || {};
+  const { email, nickname, password } = req.body || {};
   if (!email || !nickname || !password) {
     return res.status(400).json({ error: '请填写邮箱、昵称和密码' });
-  }
-  const codeStr = String(code ?? '').trim();
-  if (!codeStr) {
-    return res.status(400).json({ error: '请填写邮箱验证码', code: 'CODE_REQUIRED' });
   }
   const trimmedEmail = String(email).trim().toLowerCase();
   if (!isSchoolEmail(trimmedEmail)) {
     return res.status(400).json({ error: '邮箱须为 P + 7 位数字 + @mpu.edu.mo，如 P1234567@mpu.edu.mo', code: 'EMAIL_INVALID' });
-  }
-  const row = await db.prepare('SELECT token, expires_at FROM email_verifications WHERE email = ?').get(trimmedEmail);
-  if (!row) {
-    return res.status(400).json({ error: '请先获取邮箱验证码', code: 'CODE_INVALID' });
-  }
-  if (new Date(row.expires_at) < new Date()) {
-    await db.prepare('DELETE FROM email_verifications WHERE email = ?').run(trimmedEmail);
-    return res.status(400).json({ error: '验证码已过期，请重新获取', code: 'CODE_EXPIRED' });
-  }
-  if (row.token !== codeStr) {
-    return res.status(400).json({ error: '验证码错误', code: 'CODE_WRONG' });
   }
   const trimmedNickname = String(nickname).trim();
   const existing = await db.prepare('SELECT id FROM users WHERE email = ? OR nickname = ?').get(trimmedEmail, trimmedNickname);
@@ -115,7 +101,6 @@ router.post('/register', async (req, res) => {
   const password_hash = bcrypt.hashSync(password, 10);
   const result = await db.prepare('INSERT INTO users (email, nickname, password_hash) VALUES (?, ?, ?)').run(trimmedEmail, trimmedNickname, password_hash);
   const userId = result.lastInsertRowid;
-  await db.prepare('DELETE FROM email_verifications WHERE email = ?').run(trimmedEmail);
   const token = signToken(userId);
   res.json({ token, userId, email: trimmedEmail, nickname: trimmedNickname, needOnboarding: true });
 });

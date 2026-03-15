@@ -24,11 +24,11 @@ export async function sendRegisterCode(email) {
   return data;
 }
 
-export async function register(email, code, nickname, password) {
+export async function register(email, nickname, password) {
   const res = await fetch(`${API}/auth/register`, {
     method: 'POST',
     headers: getHeaders(false),
-    body: JSON.stringify({ email: email.trim().toLowerCase(), code: String(code).trim(), nickname, password }),
+    body: JSON.stringify({ email: email.trim().toLowerCase(), nickname, password }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || '注册失败');
