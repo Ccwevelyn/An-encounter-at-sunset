@@ -57,10 +57,6 @@
 - **本地用 SQLite 时**：在浏览器打开 `/admin?secret=你的ADMIN_SECRET`（环境变量 `ADMIN_SECRET` 需与 URL 中 `secret` 一致），可查看/编辑 users、profiles、matches、messages 等表。
 - **部署用 PostgreSQL 时**：不提供 `/admin`，在 Render（或所用平台）控制台里打开该 PostgreSQL 实例，用其自带的数据库管理或外部客户端连接 `DATABASE_URL` 查看。
 
-## 邮件与费用（Resend）
-
-发登录/注册验证码使用 Resend。Resend **免费额度**：每月 3000 封、每日约 100 封，无需绑卡；超出后才需付费。本项目的验证码用量一般都在免费额度内。若验证码邮件发不出去，请检查环境变量 `RESEND_API_KEY` 是否已配置、发信域名是否在 Resend 中验证。
-
 ## 文件架构
 
 ```
@@ -77,7 +73,7 @@
 ├── server/                 # 后端（Node + Express）
 │   ├── index.js            # 入口，挂载路由与静态
 │   ├── db.js、db-pg.js     # SQLite / PostgreSQL
-│   ├── deepseek.js、resend.js
+│   ├── deepseek.js
 │   ├── middleware/auth.js
 │   ├── routes/             # auth、profile、match、chat、admin
 │   ├── admin.html          # 本地数据库管理页

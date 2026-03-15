@@ -13,17 +13,6 @@ function getHeaders(useAuth = true) {
   return h;
 }
 
-export async function sendRegisterCode(email) {
-  const res = await fetch(`${API}/auth/send-register-code`, {
-    method: 'POST',
-    headers: getHeaders(false),
-    body: JSON.stringify({ email: email.trim().toLowerCase() }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || '发送失败');
-  return data;
-}
-
 export async function register(email, nickname, password) {
   const res = await fetch(`${API}/auth/register`, {
     method: 'POST',

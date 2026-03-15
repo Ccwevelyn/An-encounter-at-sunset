@@ -48,9 +48,4 @@ if (existsSync(distPath)) {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running at http://localhost:${PORT}`);
-  if (!process.env.RESEND_API_KEY) {
-    console.warn('[Resend] 未配置 RESEND_API_KEY，登录/注册验证码将不会真实发送（开发环境会打印到控制台）');
-  } else {
-    console.log('[Resend] 已配置，验证码邮件将通过 Resend 发送');
-  }
 });
