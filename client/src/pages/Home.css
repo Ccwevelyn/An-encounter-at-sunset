@@ -133,6 +133,130 @@
   cursor: not-allowed;
 }
 
+.home__soul-btns {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.home__soul-btn {
+  flex: 1;
+  text-align: center;
+  padding: 0.65rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.home__soul-btns .home__complete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.home__soul-btns .home__complete-btn:hover {
+  background: var(--bg-soft);
+  color: var(--accent);
+}
+
+.home__soul-btns button.home__soul-btn {
+  background: var(--accent);
+  color: #0d0d0d;
+}
+
+.home__soul-btns button.home__soul-btn:hover:not(:disabled) {
+  background: var(--accent-dim);
+  color: #fff;
+}
+
+.home__soul-btns button.home__soul-btn:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.home__back {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.home__back:hover {
+  color: var(--accent);
+}
+
+.soul-step__progress {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+}
+
+.soul-step__question {
+  font-size: 1.05rem;
+  margin: 0 0 1rem;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.soul-step__textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.soul-step__textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.soul-step__nav {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.soul-step__btn {
+  flex: 1;
+  padding: 0.65rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.soul-step__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.soul-step__btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0d0d0d;
+}
+
+.soul-step__btn--primary:hover:not(:disabled) {
+  background: var(--accent-dim);
+  color: #fff;
+  border-color: var(--accent-dim);
+}
+
 .home__error {
   color: var(--err);
   font-size: 0.9rem;

@@ -44,3 +44,32 @@ export async function sendLoginCodeEmail(to, code) {
   }
   return { ok: true };
 }
+
+/**
+ * 发送注册验证码邮件
+ */
+export async function sendRegisterCodeEmail(to, code) {
+  if (!client) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[Resend 未配置] 注册验证码（开发用）:', { to, code });
+      return { ok: true };
+    }
+    return { ok: false, error: '邮件服务未配置' };
+  }
+  const { data, error } = await client.emails.send({
+    from,
+    to: [to],
+    subject: '你的注册验证码',
+    html: `
+      <p>你好，</p>
+      <p>你的注册验证码是：<strong>${code}</strong></p>
+      <p>有效期 5 分钟，请勿泄露给他人。</p>
+      <p>如非本人操作，请忽略此邮件。</p>
+    `,
+  });
+  if (error) {
+    console.error('[Resend] 发送失败:', error);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}

@@ -3,13 +3,14 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import db from '../db.js';
 import { signToken } from '../middleware/auth.js';
-import { sendLoginCodeEmail } from '../resend.js';
+import { sendLoginCodeEmail, sendRegisterCodeEmail } from '../resend.js';
 
 const router = Router();
 
 const EMAIL_SUFFIX = '@mpu.edu.mo';
 const VERIFY_EXPIRE_MS = 24 * 60 * 60 * 1000;
 const LOGIN_CODE_EXPIRE_MS = 5 * 60 * 1000; // 5 分钟
+const REGISTER_CODE_EXPIRE_MS = 5 * 60 * 1000; // 5 分钟
 
 // 发送邮箱验证（占位：需配置 SMTP 或 Resend 后真正发信，当前仅写库并打印链接便于开发）
 router.post('/send-verification', async (req, res) => {
@@ -32,7 +33,7 @@ router.post('/send-verification', async (req, res) => {
   res.json({ ok: true, message: '验证邮件已发送（开发环境下请查看控制台链接）' });
 });
 
-// 验证邮箱 token，返回可用来完成注册的临时凭证（占位：前端可用此 token 在注册时带上以完成认证）
+// 验证邮箱 token（链接验证用）
 router.get('/verify-email', async (req, res) => {
   const token = req.query?.token;
   if (!token) {
@@ -48,14 +49,50 @@ router.get('/verify-email', async (req, res) => {
   res.json({ ok: true, email: row.email, verifiedToken: token });
 });
 
+// 发送注册验证码（4 位数字，5 分钟有效，仅限未注册邮箱）
+router.post('/send-register-code', async (req, res) => {
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  if (!email || !email.endsWith(EMAIL_SUFFIX)) {
+    return res.status(400).json({ error: '请填写有效的 @mpu.edu.mo 邮箱' });
+  }
+  const existing = await db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+  if (existing) {
+    return res.status(400).json({ error: '该邮箱已注册，请直接登录' });
+  }
+  const code = String(crypto.randomInt(1000, 10000));
+  const expiresAt = new Date(Date.now() + REGISTER_CODE_EXPIRE_MS).toISOString();
+  await db.prepare('DELETE FROM email_verifications WHERE email = ?').run(email);
+  await db.prepare('INSERT INTO email_verifications (email, token, expires_at) VALUES (?, ?, ?)').run(email, code, expiresAt);
+  const result = await sendRegisterCodeEmail(email, code);
+  if (!result.ok) {
+    return res.status(500).json({ error: result.error || '发送验证码失败，请稍后重试' });
+  }
+  res.json({ ok: true, message: '验证码已发送到你的邮箱，5 分钟内有效' });
+});
+
 router.post('/register', async (req, res) => {
-  const { email, nickname, password } = req.body || {};
+  const { email, nickname, password, code } = req.body || {};
   if (!email || !nickname || !password) {
     return res.status(400).json({ error: '请填写邮箱、昵称和密码' });
+  }
+  const codeStr = String(code ?? '').trim();
+  if (!codeStr) {
+    return res.status(400).json({ error: '请填写邮箱验证码', code: 'CODE_REQUIRED' });
   }
   const trimmedEmail = String(email).trim().toLowerCase();
   if (!trimmedEmail.endsWith(EMAIL_SUFFIX)) {
     return res.status(400).json({ error: '邮箱须为 @mpu.edu.mo 结尾', code: 'EMAIL_SUFFIX' });
+  }
+  const row = await db.prepare('SELECT token, expires_at FROM email_verifications WHERE email = ?').get(trimmedEmail);
+  if (!row) {
+    return res.status(400).json({ error: '请先获取邮箱验证码', code: 'CODE_INVALID' });
+  }
+  if (new Date(row.expires_at) < new Date()) {
+    await db.prepare('DELETE FROM email_verifications WHERE email = ?').run(trimmedEmail);
+    return res.status(400).json({ error: '验证码已过期，请重新获取', code: 'CODE_EXPIRED' });
+  }
+  if (row.token !== codeStr) {
+    return res.status(400).json({ error: '验证码错误', code: 'CODE_WRONG' });
   }
   const trimmedNickname = String(nickname).trim();
   const existing = await db.prepare('SELECT id FROM users WHERE email = ? OR nickname = ?').get(trimmedEmail, trimmedNickname);
@@ -69,6 +106,7 @@ router.post('/register', async (req, res) => {
   const password_hash = bcrypt.hashSync(password, 10);
   const result = await db.prepare('INSERT INTO users (email, nickname, password_hash) VALUES (?, ?, ?)').run(trimmedEmail, trimmedNickname, password_hash);
   const userId = result.lastInsertRowid;
+  await db.prepare('DELETE FROM email_verifications WHERE email = ?').run(trimmedEmail);
   const token = signToken(userId);
   res.json({ token, userId, email: trimmedEmail, nickname: trimmedNickname, needOnboarding: true });
 });

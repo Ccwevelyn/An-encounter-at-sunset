@@ -1,16 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { register } from '../api';
+import { register, sendRegisterCode } from '../api';
 import './Auth.css';
 
 const EMAIL_SUFFIX = '@mpu.edu.mo';
 
 export default function Register({ onRegister }) {
   const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [codeCooldown, setCodeCooldown] = useState(0);
+
+  useEffect(() => {
+    if (codeCooldown <= 0) return;
+    const t = setInterval(() => setCodeCooldown((c) => (c <= 1 ? 0 : c - 1)), 1000);
+    return () => clearInterval(t);
+  }, [codeCooldown]);
+
+  const handleSendCode = async () => {
+    const em = email.trim().toLowerCase();
+    if (!em || !em.endsWith(EMAIL_SUFFIX)) {
+      setError('请填写有效的 @mpu.edu.mo 邮箱');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      await sendRegisterCode(em);
+      setCodeCooldown(60);
+    } catch (err) {
+      setError(err.message || '发送失败');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,9 +45,13 @@ export default function Register({ onRegister }) {
       setError('邮箱须为 @mpu.edu.mo 结尾');
       return;
     }
+    if (!code.trim()) {
+      setError('请填写邮箱验证码');
+      return;
+    }
     setLoading(true);
     try {
-      const data = await register(email.trim().toLowerCase(), nickname.trim(), password);
+      const data = await register(email.trim().toLowerCase(), code.trim(), nickname.trim(), password);
       onRegister(data);
     } catch (err) {
       setError(err.message || '注册失败');
@@ -34,17 +64,40 @@ export default function Register({ onRegister }) {
     <div className="auth">
       <div className="auth__card">
         <h1 className="auth__title">注册</h1>
+        <p className="auth__subtitle">邮箱将收到 4 位验证码，5 分钟内有效</p>
         <form onSubmit={handleSubmit} className="auth__form">
           {error && <p className="auth__error">{error}</p>}
           <label>
             <span>邮箱</span>
+            <div className="auth__code-row">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={`xxx${EMAIL_SUFFIX}`}
+                required
+                autoComplete="email"
+              />
+              <button
+                type="button"
+                className="auth__code-btn"
+                onClick={handleSendCode}
+                disabled={loading || codeCooldown > 0}
+              >
+                {codeCooldown > 0 ? `${codeCooldown}s 后重发` : '获取验证码'}
+              </button>
+            </div>
+          </label>
+          <label>
+            <span>邮箱验证码</span>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={`xxx${EMAIL_SUFFIX}`}
-              required
-              autoComplete="email"
+              type="text"
+              inputMode="numeric"
+              maxLength={4}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+              placeholder="4 位验证码"
+              autoComplete="one-time-code"
             />
           </label>
           <label>
@@ -54,6 +107,7 @@ export default function Register({ onRegister }) {
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               required
+              minLength={1}
               autoComplete="username"
             />
           </label>

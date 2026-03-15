@@ -260,6 +260,10 @@ router.post('/soul', async (req, res) => {
   if (!myProfile) {
     return res.status(400).json({ error: '请先完善个人资料' });
   }
+  const mySoul = await db.prepare('SELECT 1 FROM soul_answers WHERE user_id = ? LIMIT 1').get(req.userId);
+  if (!mySoul) {
+    return res.status(400).json({ error: '请先填写主观题' });
+  }
   const myGender = myProfile.gender;
   const myPreferred = myProfile.preferred_gender;
   const withSoulRows = await db.prepare(`
@@ -342,8 +346,9 @@ ${candidateBlocks}`;
   return res.json({ matched: true, partnerId: chosen.user_id });
 });
 
-// 当前用户的所有匹配（含对方昵称，供聊天列表用）；同一对象只显示一次（去重），并默认包含 Test 机器人
-const TEST_PARTNER_ID = 0;
+// 当前用户的所有匹配（含对方昵称，供聊天列表用）；同一对象只显示一次（去重），并默认包含三个聊天角色
+const BOT_IDS = [0, 1, 2];
+const BOT_NAMES = { 0: '最伟大最尊敬的导师', 1: '看不上你对象的朋友', 2: '知心姐姐' };
 
 router.get('/list', async (req, res) => {
   const rows = await db.prepare(`
@@ -369,13 +374,16 @@ router.get('/list', async (req, res) => {
     });
   }
   const list = Array.from(byPartner.values());
-  list.unshift({
-    matchId: 'test',
-    partnerId: TEST_PARTNER_ID,
-    partnerNickname: 'Test',
-    mode: 'soul',
-    createdAt: new Date().toISOString(),
-  });
+  const now = new Date().toISOString();
+  for (const id of BOT_IDS) {
+    list.unshift({
+      matchId: `bot-${id}`,
+      partnerId: id,
+      partnerNickname: BOT_NAMES[id],
+      mode: 'soul',
+      createdAt: now,
+    });
+  }
   res.json({ list });
 });
 

@@ -101,7 +101,8 @@ router.put('/', async (req, res) => {
   res.json({ ok: true });
 });
 
-const TEST_PARTNER_ID = 0;
+const BOT_IDS = [0, 1, 2];
+const BOT_NAMES = { 0: '最伟大最尊敬的导师', 1: '看不上你对象的朋友', 2: '知心姐姐' };
 
 // 获取其他用户公开档案（用于匹配结果、聊天对象信息）
 router.get('/:userId', async (req, res) => {
@@ -109,8 +110,8 @@ router.get('/:userId', async (req, res) => {
   if (targetId === req.userId) {
     return res.json({ self: true });
   }
-  if (targetId === TEST_PARTNER_ID) {
-    return res.json({ user: { id: TEST_PARTNER_ID, nickname: 'Test' }, profile: null });
+  if (BOT_IDS.includes(targetId)) {
+    return res.json({ user: { id: targetId, nickname: BOT_NAMES[targetId] }, profile: null });
   }
   const user = await db.prepare('SELECT id, nickname FROM users WHERE id = ?').get(targetId);
   if (!user) return res.status(404).json({ error: '用户不存在' });

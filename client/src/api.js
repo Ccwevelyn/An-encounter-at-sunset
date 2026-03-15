@@ -13,11 +13,22 @@ function getHeaders(useAuth = true) {
   return h;
 }
 
-export async function register(email, nickname, password) {
+export async function sendRegisterCode(email) {
+  const res = await fetch(`${API}/auth/send-register-code`, {
+    method: 'POST',
+    headers: getHeaders(false),
+    body: JSON.stringify({ email: email.trim().toLowerCase() }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || '发送失败');
+  return data;
+}
+
+export async function register(email, code, nickname, password) {
   const res = await fetch(`${API}/auth/register`, {
     method: 'POST',
     headers: getHeaders(false),
-    body: JSON.stringify({ email, nickname, password }),
+    body: JSON.stringify({ email: email.trim().toLowerCase(), code: String(code).trim(), nickname, password }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || '注册失败');

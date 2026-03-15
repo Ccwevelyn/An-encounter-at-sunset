@@ -18,7 +18,7 @@ export default function Home({ user, onLogout, refreshUser }) {
       if (res.matched && res.partnerId) {
         navigate(`/match/${res.partnerId}`, { replace: true });
       } else {
-        setError(res.error || '暂无灵魂共鸣候选，先填写主观题或邀请更多人参与');
+        setError(res.error || '请先填写主观题，或暂无其他候选');
       }
     } catch (err) {
       setError(err.message || '请求失败');
@@ -105,11 +105,13 @@ export default function Home({ user, onLogout, refreshUser }) {
           </div>
           <div className="home__mode-card">
             <h2>灵魂共鸣</h2>
-            <p>回答 3–5 道主观题，用文字表达想法，系统将为你找到想法更接近的人（可先填主观题再匹配）。</p>
-            <Link to="/soul" className="home__link" style={{ marginBottom: '0.5rem', display: 'inline-block' }}>去填主观题</Link>
-            <button type="button" onClick={handleSoul} disabled={loading}>
-              {loading && mode === 'soul' ? '匹配中…' : '开始灵魂共鸣匹配'}
-            </button>
+            <p>回答 3–5 道主观题，用文字表达想法，系统将为你找到想法更接近的人。</p>
+            <div className="home__soul-btns">
+              <Link to="/soul" className="home__complete-btn home__soul-btn">去填主观题</Link>
+              <button type="button" className="home__soul-btn" onClick={handleSoul} disabled={loading}>
+                {loading && mode === 'soul' ? '匹配中…' : '开启灵魂共鸣'}
+              </button>
+            </div>
           </div>
         </section>
         )}

@@ -6,6 +6,7 @@ import './Home.css';
 export default function Soul() {
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
+  const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
@@ -16,6 +17,19 @@ export default function Soul() {
       .catch(() => setQuestions([]))
       .finally(() => setLoading(false));
   }, []);
+
+  const total = questions.length;
+  const current = questions[step];
+  const isFirst = step === 0;
+  const isLast = step === total - 1;
+
+  const handleNext = () => {
+    if (step < total - 1) setStep((s) => s + 1);
+  };
+
+  const handlePrev = () => {
+    if (step > 0) setStep((s) => s - 1);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,7 +53,21 @@ export default function Soul() {
   if (loading) {
     return (
       <div className="home">
-        <p style={{ padding: '2rem', textAlign: 'center' }}>加载中…</p>
+        <p style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>加载中…</p>
+      </div>
+    );
+  }
+
+  if (total === 0) {
+    return (
+      <div className="home">
+        <header className="home__header">
+          <Link to="/" className="home__back">← 返回</Link>
+          <span className="home__title">灵魂共鸣</span>
+        </header>
+        <main className="home__main">
+          <p className="home__error">暂无题目</p>
+        </main>
       </div>
     );
   }
@@ -48,30 +76,57 @@ export default function Soul() {
     <div className="home">
       <header className="home__header">
         <Link to="/" className="home__back">← 返回</Link>
-        <span className="home__title">灵魂共鸣 · 主观题</span>
+        <span className="home__title">灵魂共鸣 · {step + 1}/{total}</span>
       </header>
       <main className="home__main" style={{ maxWidth: '32rem', margin: '0 auto' }}>
-        <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
-          用文字写下你的想法，我们会据此为你找到想法更接近的人（后续可接 AI 分析）。
-        </p>
-        <form onSubmit={handleSubmit}>
-          {questions.map((q) => (
-            <label key={q.id} style={{ display: 'block', marginBottom: '1.25rem' }}>
-              <span style={{ display: 'block', marginBottom: '0.35rem', fontWeight: 600 }}>{q.question}</span>
+        <div className="home__mode-card soul-step">
+          {current && (
+            <>
+              <p className="soul-step__progress" aria-hidden>
+                第 {step + 1} 题，共 {total} 题
+              </p>
+              <h2 className="soul-step__question">{current.question}</h2>
               <textarea
-                value={answers[q.id] ?? ''}
-                onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
-                rows={3}
-                style={{ width: '100%', padding: '0.6rem', borderRadius: 8, border: '1px solid var(--border)' }}
+                className="soul-step__textarea"
+                value={answers[current.id] ?? ''}
+                onChange={(e) => setAnswers((a) => ({ ...a, [current.id]: e.target.value }))}
+                rows={4}
                 placeholder="写下你的想法…"
               />
-            </label>
-          ))}
-          {msg && <p className="home__error" style={{ marginBottom: '0.5rem' }}>{msg}</p>}
-          <button type="submit" disabled={saving} className="home__complete-btn">
-            {saving ? '保存中…' : '保存主观题答案'}
+            </>
+          )}
+        </div>
+
+        <div className="soul-step__nav">
+          <button
+            type="button"
+            className="home__complete-btn soul-step__btn"
+            onClick={handlePrev}
+            disabled={isFirst}
+          >
+            上一题
           </button>
-        </form>
+          {!isLast ? (
+            <button
+              type="button"
+              className="soul-step__btn soul-step__btn--primary"
+              onClick={handleNext}
+            >
+              下一题
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="soul-step__btn soul-step__btn--primary"
+              onClick={handleSubmit}
+              disabled={saving}
+            >
+              {saving ? '保存中…' : '保存答案'}
+            </button>
+          )}
+        </div>
+
+        {msg && <p className="home__error" style={{ marginTop: '1rem' }}>{msg}</p>}
       </main>
     </div>
   );
