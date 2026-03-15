@@ -32,7 +32,7 @@ export default function Soul() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const list = questions
       .map((q) => ({ questionId: Number(q.id), answer: String(answers[q.id] ?? '').trim() }))
       .filter((a) => a.answer.length > 0);
@@ -46,7 +46,8 @@ export default function Soul() {
       await submitSoulAnswers(list);
       setMsg('已保存，可以回主页进行灵魂共鸣匹配。');
     } catch (err) {
-      setMsg(err?.message || '提交失败，请检查网络或重新登录');
+      const message = err?.message || '';
+      setMsg(message.includes('401') || message.includes('登录') ? '请重新登录后再提交' : message || '提交失败，请检查网络');
     } finally {
       setSaving(false);
     }

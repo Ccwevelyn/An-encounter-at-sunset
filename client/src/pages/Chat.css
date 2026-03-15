@@ -68,6 +68,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .chat-page__msg {
@@ -81,6 +83,12 @@
 .chat-page__msg.mine {
   align-self: flex-end;
   margin-left: auto;
+  margin-right: 0;
+  align-items: flex-end;
+}
+
+.chat-page__list .chat-page__msg.mine {
+  flex-direction: column;
   align-items: flex-end;
 }
 

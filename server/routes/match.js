@@ -241,23 +241,28 @@ router.get('/soul/questions', async (req, res) => {
 });
 
 router.post('/soul/answers', async (req, res) => {
-  const answers = req.body?.answers;
-  if (!Array.isArray(answers) || answers.length === 0) {
-    return res.status(400).json({ error: '请至少回答一题' });
+  try {
+    const answers = req.body?.answers;
+    if (!Array.isArray(answers) || answers.length === 0) {
+      return res.status(400).json({ error: '请至少回答一题' });
+    }
+    let saved = 0;
+    for (const a of answers) {
+      const qId = a.questionId ?? a.question_id;
+      const text = a.answer != null ? String(a.answer).trim() : '';
+      if (!qId || text === '') continue;
+      await db.prepare('DELETE FROM soul_answers WHERE user_id = ? AND question_id = ?').run(req.userId, qId);
+      await db.prepare('INSERT INTO soul_answers (user_id, question_id, answer) VALUES (?, ?, ?)').run(req.userId, qId, text);
+      saved += 1;
+    }
+    if (saved === 0) {
+      return res.status(400).json({ error: '请至少回答一题' });
+    }
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('[soul/answers]', e);
+    return res.status(500).json({ error: e.message || '保存失败，请稍后重试' });
   }
-  let saved = 0;
-  for (const a of answers) {
-    const qId = a.questionId ?? a.question_id;
-    const text = a.answer != null ? String(a.answer).trim() : '';
-    if (!qId || text === '') continue;
-    await db.prepare('DELETE FROM soul_answers WHERE user_id = ? AND question_id = ?').run(req.userId, qId);
-    await db.prepare('INSERT INTO soul_answers (user_id, question_id, answer) VALUES (?, ?, ?)').run(req.userId, qId, text);
-    saved += 1;
-  }
-  if (saved === 0) {
-    return res.status(400).json({ error: '请至少回答一题' });
-  }
-  res.json({ ok: true });
 });
 
 router.post('/soul', async (req, res) => {

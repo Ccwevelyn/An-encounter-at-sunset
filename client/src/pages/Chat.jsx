@@ -93,12 +93,13 @@ export default function Chat({ user }) {
 
       <ul className="chat-page__list" ref={listRef}>
         {messages.map((msg) => {
-          const sid = Number(msg.sender_id);
-          const myId = Number(user?.id);
-          const isMine = myId != null && myId === sid && !BOT_SENDER_IDS.includes(sid);
+          const sid = msg.sender_id != null ? Number(msg.sender_id) : NaN;
+          const myId = user?.id != null ? Number(user.id) : NaN;
+          const isBotMsg = BOT_SENDER_IDS.includes(sid);
+          const isMine = !isBotMsg && !Number.isNaN(myId) && myId === sid;
           return (
           <li
-            key={msg.id}
+            key={`${msg.id}-${msg.created_at || ''}`}
             className={`chat-page__msg ${isMine ? 'mine' : ''}`}
           >
             <span className="chat-page__msg-content">{msg.content}</span>
