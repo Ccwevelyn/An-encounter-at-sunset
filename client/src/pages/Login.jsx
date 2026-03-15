@@ -67,6 +67,7 @@ export default function Login({ onLogin }) {
   return (
     <div className="auth">
       <div className="auth__card">
+        <p className="auth__site-name">在日落下相遇</p>
         <h1 className="auth__title">登录</h1>
         <div className="auth__tabs">
           <button

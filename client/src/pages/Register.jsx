@@ -11,6 +11,7 @@ export default function Register({ onRegister }) {
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [codeCooldown, setCodeCooldown] = useState(0);
 
@@ -31,8 +32,10 @@ export default function Register({ onRegister }) {
     try {
       await sendRegisterCode(em);
       setCodeCooldown(60);
+      setCodeSent(true);
+      setError('');
     } catch (err) {
-      setError(err.message || '发送失败');
+      setError(err.message || '发送失败，请检查网络或稍后重试');
     } finally {
       setLoading(false);
     }
@@ -63,10 +66,12 @@ export default function Register({ onRegister }) {
   return (
     <div className="auth">
       <div className="auth__card">
+        <p className="auth__site-name">在日落下相遇</p>
         <h1 className="auth__title">注册</h1>
-        <p className="auth__subtitle">邮箱将收到 4 位验证码，5 分钟内有效</p>
+        <p className="auth__subtitle">请先填写邮箱并点击「获取验证码」，再将邮件中的 4 位数字填入下方</p>
         <form onSubmit={handleSubmit} className="auth__form">
           {error && <p className="auth__error">{error}</p>}
+          {codeSent && !error && <p className="auth__success">验证码已发送，请查收邮件（含垃圾箱）后填入下方</p>}
           <label>
             <span>邮箱</span>
             <div className="auth__code-row">
@@ -88,16 +93,17 @@ export default function Register({ onRegister }) {
               </button>
             </div>
           </label>
-          <label>
-            <span>邮箱验证码</span>
+          <label className="auth__code-label">
+            <span>邮箱验证码（4 位数字）</span>
             <input
               type="text"
               inputMode="numeric"
               maxLength={4}
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-              placeholder="4 位验证码"
+              placeholder="请输入邮件中的 4 位验证码"
               autoComplete="one-time-code"
+              className="auth__code-input"
             />
           </label>
           <label>

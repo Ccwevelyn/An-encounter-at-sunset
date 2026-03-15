@@ -6,7 +6,7 @@
 import { Resend } from 'resend';
 
 const apiKey = process.env.RESEND_API_KEY;
-const from = process.env.RESEND_FROM || '日落相遇 <onboarding@resend.dev>';
+const from = process.env.RESEND_FROM || '在日落下相遇 <onboarding@resend.dev>';
 
 let client = null;
 if (apiKey) {

@@ -16,6 +16,14 @@
   padding: 2rem;
 }
 
+.auth__site-name {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  color: var(--accent);
+  margin: 0 0 0.5rem;
+  text-align: center;
+}
+
 .auth__title {
   font-family: var(--font-serif);
   font-size: 1.5rem;
@@ -121,6 +129,21 @@
   color: var(--err);
   font-size: 0.875rem;
   margin: 0;
+}
+
+.auth__success {
+  color: var(--accent);
+  font-size: 0.875rem;
+  margin: 0;
+  padding: 0.5rem 0;
+}
+
+.auth__code-label { margin-top: 0.25rem; }
+
+.auth__code-input {
+  font-size: 1.1rem;
+  letter-spacing: 0.25em;
+  text-align: center;
 }
 
 .auth__link {
