@@ -97,6 +97,7 @@ async function runMigrations() {
         expires_at TIMESTAMPTZ NOT NULL
       );
     `);
+    try { await client.query('ALTER TABLE matches ADD COLUMN match_reason TEXT'); } catch (e) { if (e.code !== '42701') throw e; }
     const seed = await client.query('SELECT COUNT(*) FROM soul_questions');
     if (Number(seed.rows[0].count) === 0) {
       await client.query(`

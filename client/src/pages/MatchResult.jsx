@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { getOtherProfile } from '../api';
+import { Link, useParams, useLocation } from 'react-router-dom';
+import { getOtherProfile, getMatchWith } from '../api';
 import { getDegreeDisplay, getCollegeDisplay } from '../data/mpu';
 import mentorAvatar from '../assets/mentor-avatar.png';
 import './MatchResult.css';
@@ -22,10 +22,12 @@ function showValue(v) {
 
 export default function MatchResult({ user }) {
   const { partnerId } = useParams();
+  const location = useLocation();
   const pid = String(partnerId ?? '');
   const [partner, setPartner] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [matchReason, setMatchReason] = useState(location.state?.matchReason ?? null);
   const isBot = BOT_IDS.includes(pid);
 
   useEffect(() => {
@@ -37,6 +39,17 @@ export default function MatchResult({ user }) {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [partnerId]);
+
+  useEffect(() => {
+    if (isBot || !partnerId) return;
+    if (location.state?.matchReason) {
+      setMatchReason(location.state.matchReason);
+      return;
+    }
+    getMatchWith(partnerId).then((data) => {
+      if (data?.matchReason) setMatchReason(data.matchReason);
+    }).catch(() => {});
+  }, [partnerId, isBot, location.state?.matchReason]);
 
   // 三个 AI 角色（0 导师、1 看不上你对象的朋友、2 知心姐姐）：直接用本地数据展示档案，不依赖接口
   if (isBot) {
@@ -149,6 +162,13 @@ export default function MatchResult({ user }) {
             与 TA 聊天
           </Link>
         </section>
+
+        {matchReason && (
+          <section className="match-result__card match-result__reason">
+            <h2 className="match-result__card-title">为什么你们适合</h2>
+            <p className="match-result__intro-text">{matchReason}</p>
+          </section>
+        )}
 
         {(p.intro || photos.length > 0) && (
           <section className="match-result__card match-result__intro">

@@ -107,6 +107,13 @@ export async function getMatchList() {
   return data;
 }
 
+export async function getMatchWith(partnerId) {
+  const res = await fetch(`${API}/match/with/${partnerId}`, { headers: getHeaders() });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return null;
+  return data;
+}
+
 export async function getMessages(partnerId) {
   const res = await fetch(`${API}/chat/${partnerId}`, { headers: getHeaders() });
   const data = await res.json().catch(() => ({}));

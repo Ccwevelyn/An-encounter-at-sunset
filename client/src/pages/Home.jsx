@@ -16,7 +16,7 @@ export default function Home({ user, onLogout, refreshUser }) {
     try {
       const res = await matchSoul();
       if (res.matched && res.partnerId) {
-        navigate(`/match/${res.partnerId}`, { replace: true });
+        navigate(`/match/${res.partnerId}`, { replace: true, state: { matchReason: res.matchReason } });
       } else {
         setError(res.error || '请先填写主观题，或暂无其他候选');
       }

@@ -94,6 +94,7 @@ if (process.env.DATABASE_URL) {
     CREATE TABLE IF NOT EXISTS login_codes (email TEXT PRIMARY KEY, code TEXT NOT NULL, expires_at TEXT NOT NULL);
   `);
   ['degree', 'preferred_gender', 'avatar'].forEach(col => { try { sqlite.exec(`ALTER TABLE profiles ADD COLUMN ${col} TEXT`); } catch (_) {} });
+  try { sqlite.exec('ALTER TABLE matches ADD COLUMN match_reason TEXT'); } catch (_) {}
   const seed = [
     [1, '你如何看待双方家庭或成长背景的差异？（如门当户对、父母意见等）', 1],
     [2, '发生矛盾或分歧时，你希望两个人怎样面对？', 2],

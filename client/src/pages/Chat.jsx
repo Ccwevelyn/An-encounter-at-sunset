@@ -119,6 +119,7 @@ export default function Chat({ user }) {
           <li
             key={msg.id ?? `${msg.sender_id}-${msg.created_at || ''}`}
             className={`chat-page__msg ${isMine ? 'mine chat-page__msg--mine' : ''}`}
+            style={{ display: 'flex', width: '100%', justifyContent: isMine ? 'flex-end' : 'flex-start', boxSizing: 'border-box' }}
           >
             <div className="chat-page__bubble">
               <span className="chat-page__msg-content">{msg.content}</span>

@@ -89,9 +89,10 @@
         const name = tableSelect.value;
         if (!name) return;
         api('/api/admin/table/' + name).then(r => r.json()).then(data => {
-          const pk = name === 'profiles' ? 'user_id' : 'id';
+          const pk = name === 'profiles' ? 'user_id' : (name === 'soul_answers' ? null : 'id');
+          const isComposite = name === 'soul_answers';
           let html = '<table><thead><tr>';
-          data.columns.forEach(c => { html += '<th>' + c.name + (c.name === pk ? ' <span class="pk">(主键)</span>' : '') + '</th>'; });
+          data.columns.forEach(c => { html += '<th>' + c.name + (c.name === pk || (isComposite && (c.name === 'user_id' || c.name === 'question_id')) ? ' <span class="pk">(主键)</span>' : '') + '</th>'; });
           html += '<th>操作</th></tr></thead><tbody>';
           data.rows.forEach(row => {
             html += '<tr data-row="' + JSON.stringify(row).replace(/"/g, '&quot;') + '">';
@@ -104,25 +105,25 @@
           tableWrap.querySelectorAll('.edit-row').forEach(btn => {
             btn.onclick = () => {
               const listRow = JSON.parse(btn.closest('tr').dataset.row);
-              const pkVal = listRow[pk];
+              const pkVal = isComposite ? (listRow.user_id + '_' + listRow.question_id) : listRow[pk];
               editTitle.textContent = '加载中…';
               editFields.innerHTML = '';
               editForm.style.display = 'block';
               api('/api/admin/table/' + name + '/row/' + encodeURIComponent(pkVal)).then(r => r.json()).then(row => {
-                editTitle.textContent = '编辑 ' + name + ' · ' + pk + ' = ' + pkVal;
+                editTitle.textContent = isComposite ? ('编辑 ' + name + ' · user_id=' + row.user_id + ', question_id=' + row.question_id) : ('编辑 ' + name + ' · ' + pk + ' = ' + pkVal);
                 data.columns.forEach(c => {
-                  if (c.name === pk) return;
+                  if (!isComposite && c.name === pk) return;
                   const label = document.createElement('label');
                   label.textContent = c.name;
-                  const input = document.createElement(c.type === 'INTEGER' ? 'input' : 'textarea');
+                  const input = document.createElement((c.name === 'user_id' || c.name === 'question_id') ? 'input' : 'textarea');
                   input.name = c.name;
                   input.value = row[c.name] == null ? '' : row[c.name];
-                  if (input.tagName === 'INPUT') input.type = 'text';
-                  input.rows = (c.name === 'intro' || c.name === 'photos' || c.name === 'avatar') ? 4 : 2;
+                  if (input.tagName === 'INPUT') input.type = (c.name === 'user_id' || c.name === 'question_id') ? 'number' : 'text';
+                  if (input.tagName === 'TEXTAREA') input.rows = 4;
                   label.appendChild(input);
                   editFields.appendChild(label);
                 });
-                window._editRow = { table: name, pk, pkVal, current: row };
+                window._editRow = { table: name, pk, pkVal, current: row, isComposite };
               }).catch(e => { msg('加载该行失败: ' + e.message, true); editForm.style.display = 'none'; });
             };
           });
@@ -130,9 +131,9 @@
           tableWrap.querySelectorAll('.delete-row').forEach(btn => {
             btn.onclick = () => {
               const row = JSON.parse(btn.closest('tr').dataset.row);
-              const pk = name === 'profiles' ? 'user_id' : 'id';
+              const delBody = isComposite ? { user_id: row.user_id, question_id: row.question_id } : { [name === 'profiles' ? 'user_id' : 'id']: row[name === 'profiles' ? 'user_id' : 'id'] };
               if (!confirm('确定删除该行？')) return;
-              api('/api/admin/table/' + name + '/row/delete', { method: 'POST', body: JSON.stringify({ [pk]: row[pk] }) })
+              api('/api/admin/table/' + name + '/row/delete', { method: 'POST', body: JSON.stringify(delBody) })
                 .then(r => r.json().then(d => ({ ok: r.ok, body: d })))
                 .then(({ ok, body }) => { if (ok) { msg('已删除'); loadTable(); } else { msg(body?.error || '删除失败', true); } })
                 .catch(e => msg('删除失败: ' + (e.message || e), true));
@@ -147,8 +148,8 @@
       document.getElementById('btnSave').onclick = () => {
         const e = window._editRow;
         if (!e) return;
-        const body = { [e.pk]: e.pkVal };
-        editFields.querySelectorAll('input, textarea').forEach(el => { body[el.name] = el.value; });
+        const body = e.isComposite ? { user_id: e.current.user_id, question_id: e.current.question_id } : { [e.pk]: e.pkVal };
+        editFields.querySelectorAll('input, textarea').forEach(el => { body[el.name] = el.name === 'user_id' || el.name === 'question_id' ? Number(el.value) : el.value; });
         api('/api/admin/table/' + e.table + '/row', { method: 'POST', body: JSON.stringify(body) })
           .then(r => r.json()).then(d => { msg(d.error || '已保存'); editForm.style.display = 'none'; loadTable(); }).catch(err => msg('保存失败: ' + err.message, true));
       };
