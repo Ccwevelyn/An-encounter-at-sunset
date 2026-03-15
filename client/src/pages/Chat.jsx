@@ -47,8 +47,10 @@ export default function Chat({ user }) {
     if (!text || sending) return;
     setSending(true);
     try {
-      const { message } = await sendMessage(partnerId, text);
-      setMessages((m) => [...m, message]);
+      const data = await sendMessage(partnerId, text);
+      const msgs = [data.message];
+      if (data.botMessage) msgs.push(data.botMessage);
+      setMessages((m) => [...m, ...msgs]);
       setInput('');
     } catch (err) {
       console.error(err);
@@ -68,7 +70,7 @@ export default function Chat({ user }) {
   return (
     <div className="chat-page">
       <header className="chat-page__header">
-        <Link to={`/match/${partnerId}`} className="chat-page__back">← 返回</Link>
+        <Link to={partnerId === '0' ? '/chats' : `/match/${partnerId}`} className="chat-page__back">← 返回</Link>
         <div className="chat-page__title-wrap">
           {partner?.profile?.avatar ? (
             <img src={partner.profile.avatar} alt="" className="chat-page__avatar" />

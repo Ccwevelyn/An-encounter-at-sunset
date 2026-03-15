@@ -11,6 +11,7 @@ import AuthorWords from './pages/AuthorWords';
 import MatchResult from './pages/MatchResult';
 import Chat from './pages/Chat';
 import ChatList from './pages/ChatList';
+import Soul from './pages/Soul';
 
 const SKIP_SPLASH_KEY = 'relationship_match_skip_splash';
 
@@ -36,9 +37,15 @@ function App() {
 
   const onLogin = (data) => {
     setToken(data.token);
-    getProfile()
-      .then(setUser)
-      .catch(() => setToken(null));
+    setUser({
+      id: data.userId,
+      email: data.email,
+      nickname: data.nickname,
+      profile: data.needOnboarding ? null : undefined,
+    });
+    if (!data.needOnboarding) {
+      getProfile().then(setUser).catch(() => setToken(null));
+    }
   };
 
   const onRegister = (data) => {
@@ -94,6 +101,7 @@ function App() {
         <Route path="/author" element={<AuthorWords />} />
         <Route path="/match/:partnerId" element={user?.profile ? <MatchResult user={user} /> : user ? <Navigate to="/onboarding" replace /> : <Navigate to="/login" replace />} />
         <Route path="/chats" element={user?.profile ? <ChatList user={user} onLogout={onLogout} /> : user ? <Navigate to="/onboarding" replace /> : <Navigate to="/login" replace />} />
+        <Route path="/soul" element={user?.profile ? <Soul /> : user ? <Navigate to="/onboarding" replace /> : <Navigate to="/login" replace />} />
         <Route path="/chat/:partnerId" element={user?.profile ? <Chat user={user} /> : user ? <Navigate to="/onboarding" replace /> : <Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

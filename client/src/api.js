@@ -75,6 +75,31 @@ export async function matchFate() {
   return data;
 }
 
+export async function getSoulQuestions() {
+  const res = await fetch(`${API}/match/soul/questions`, { headers: getHeaders() });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || '获取失败');
+  return data;
+}
+
+export async function submitSoulAnswers(answers) {
+  const res = await fetch(`${API}/match/soul/answers`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ answers }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || '提交失败');
+  return data;
+}
+
+export async function matchSoul() {
+  const res = await fetch(`${API}/match/soul`, { method: 'POST', headers: getHeaders() });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || '请求失败');
+  return data;
+}
+
 export async function getMatchList() {
   const res = await fetch(`${API}/match/list`, { headers: getHeaders() });
   const data = await res.json().catch(() => ({}));

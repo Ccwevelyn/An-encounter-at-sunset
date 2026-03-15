@@ -233,7 +233,68 @@ router.post('/fate', (req, res) => {
   return res.json({ matched: true, partnerId: chosen.user_id });
 });
 
-// 当前用户的所有匹配（含对方昵称，供聊天列表用）
+// 灵魂共鸣：3–5 道主观题，用户文字回答，后续可接 AI 分析匹配
+router.get('/soul/questions', (req, res) => {
+  const rows = db.prepare('SELECT id, question, sort_order FROM soul_questions ORDER BY sort_order, id').all();
+  res.json({ questions: rows });
+});
+
+router.post('/soul/answers', (req, res) => {
+  const answers = req.body?.answers;
+  if (!Array.isArray(answers) || answers.length === 0) {
+    return res.status(400).json({ error: '请至少回答一题' });
+  }
+  for (const a of answers) {
+    const qId = a.questionId ?? a.question_id;
+    const text = a.answer != null ? String(a.answer).trim() : '';
+    if (!qId || text === '') continue;
+    db.prepare(`
+      INSERT OR REPLACE INTO soul_answers (user_id, question_id, answer) VALUES (?, ?, ?)
+    `).run(req.userId, qId, text);
+  }
+  res.json({ ok: true });
+});
+
+router.post('/soul', (req, res) => {
+  const myProfile = db.prepare('SELECT * FROM profiles WHERE user_id = ?').get(req.userId);
+  if (!myProfile) {
+    return res.status(400).json({ error: '请先完善个人资料' });
+  }
+  const myGender = myProfile.gender;
+  const myPreferred = myProfile.preferred_gender;
+  const withSoul = db.prepare(`
+    SELECT DISTINCT user_id FROM soul_answers WHERE user_id != ?
+  `).all(req.userId).map(r => r.user_id);
+  if (withSoul.length === 0) {
+    return res.status(200).json({ matched: false, error: '暂无灵魂共鸣候选，先填写主观题或邀请更多人参与' });
+  }
+  const placeholders = withSoul.map(() => '?').join(',');
+  let candidates = db.prepare(`
+    SELECT p.*, u.nickname FROM profiles p
+    JOIN users u ON u.id = p.user_id
+    WHERE p.user_id != ? AND p.user_id IN (${placeholders})
+  `).all(req.userId, ...withSoul);
+  candidates = candidates.filter(p => acceptsGender(myPreferred, p.gender) && acceptsGender(p.preferred_gender, myGender));
+  if (candidates.length === 0) {
+    return res.status(200).json({ matched: false, error: '暂无灵魂共鸣候选，先填写主观题或邀请更多人参与' });
+  }
+  const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+  const userA = Math.min(req.userId, chosen.user_id);
+  const userB = Math.max(req.userId, chosen.user_id);
+  try {
+    db.prepare('INSERT INTO matches (user_a, user_b, mode) VALUES (?, ?, ?)').run(userA, userB, 'soul');
+  } catch (e) {
+    if (e.code === 'SQLITE_CONSTRAINT') {
+      return res.json({ matched: true, partnerId: chosen.user_id, existing: true });
+    }
+    throw e;
+  }
+  return res.json({ matched: true, partnerId: chosen.user_id });
+});
+
+// 当前用户的所有匹配（含对方昵称，供聊天列表用）；同一对象只显示一次（去重），并默认包含 Test 机器人
+const TEST_PARTNER_ID = 0;
+
 router.get('/list', (req, res) => {
   const rows = db.prepare(`
     SELECT m.id, m.user_a, m.user_b, m.mode, m.created_at, u.nickname AS partner_nickname
@@ -242,17 +303,27 @@ router.get('/list', (req, res) => {
     WHERE m.user_a = ? OR m.user_b = ?
     ORDER BY m.created_at DESC
   `).all(req.userId, req.userId, req.userId);
-  const list = rows.map(r => {
+  const byPartner = new Map();
+  for (const r of rows) {
     const partnerId = r.user_a === req.userId ? r.user_b : r.user_a;
+    if (byPartner.has(partnerId)) continue;
     const fromRow = r.partner_nickname ?? r.partner_Nickname ?? r.PARTNER_NICKNAME;
     const partnerNickname = fromRow ?? db.prepare('SELECT nickname FROM users WHERE id = ?').get(partnerId)?.nickname ?? null;
-    return {
+    byPartner.set(partnerId, {
       matchId: r.id,
       partnerId,
       partnerNickname,
       mode: r.mode,
       createdAt: r.created_at,
-    };
+    });
+  }
+  const list = Array.from(byPartner.values());
+  list.unshift({
+    matchId: 'test',
+    partnerId: TEST_PARTNER_ID,
+    partnerNickname: 'Test',
+    mode: 'soul',
+    createdAt: new Date().toISOString(),
   });
   res.json({ list });
 });

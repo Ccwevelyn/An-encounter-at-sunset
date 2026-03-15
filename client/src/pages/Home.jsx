@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { matchRandom, matchFate } from '../api';
+import { matchRandom, matchFate, matchSoul } from '../api';
 import './Home.css';
 
 export default function Home({ user, onLogout, refreshUser }) {
@@ -8,6 +8,24 @@ export default function Home({ user, onLogout, refreshUser }) {
   const [mode, setMode] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const handleSoul = async () => {
+    setMode('soul');
+    setError('');
+    setLoading(true);
+    try {
+      const res = await matchSoul();
+      if (res.matched && res.partnerId) {
+        navigate(`/match/${res.partnerId}`, { replace: true });
+      } else {
+        setError(res.error || '暂无灵魂共鸣候选，先填写主观题或邀请更多人参与');
+      }
+    } catch (err) {
+      setError(err.message || '请求失败');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleRandom = async () => {
     setMode('random');
@@ -83,6 +101,14 @@ export default function Home({ user, onLogout, refreshUser }) {
             <p>根据你所填信息进行推送匹配：恋爱目的、城市、想恋爱指数、经历、MBTI 等。</p>
             <button type="button" onClick={handleFate} disabled={loading}>
               {loading && mode === 'fate' ? '匹配中…' : '开始缘分匹配'}
+            </button>
+          </div>
+          <div className="home__mode-card">
+            <h2>灵魂共鸣</h2>
+            <p>回答 3–5 道主观题，用文字表达想法，系统将为你找到想法更接近的人（可先填主观题再匹配）。</p>
+            <Link to="/soul" className="home__link" style={{ marginBottom: '0.5rem', display: 'inline-block' }}>去填主观题</Link>
+            <button type="button" onClick={handleSoul} disabled={loading}>
+              {loading && mode === 'soul' ? '匹配中…' : '开始灵魂共鸣匹配'}
             </button>
           </div>
         </section>

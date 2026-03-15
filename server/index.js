@@ -20,13 +20,15 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/match', matchRoutes);
 app.use('/api/chat', chatRoutes);
-app.use('/api/admin', adminRoutes);
 
-// 数据库管理页：仅当 URL 带 ?secret=ADMIN_SECRET 时可用
-app.get('/admin', (req, res) => {
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.send(readFileSync(join(__dirname, 'admin.html'), 'utf-8'));
-});
+// 使用 PostgreSQL（如 Render）时通常自带数据库管理界面，不再提供 /admin
+if (!process.env.DATABASE_URL) {
+  app.use('/api/admin', adminRoutes);
+  app.get('/admin', (req, res) => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(readFileSync(join(__dirname, 'admin.html'), 'utf-8'));
+  });
+}
 
 // 若已构建前端则托管静态文件（便于单机部署）
 const distPath = join(__dirname, '../client/dist');
