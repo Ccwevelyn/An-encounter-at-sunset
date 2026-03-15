@@ -67,7 +67,9 @@ router.post('/send-register-code', async (req, res) => {
   if (!result.ok) {
     return res.status(500).json({ error: result.error || '发送验证码失败，请稍后重试' });
   }
-  res.json({ ok: true, message: '验证码已发送到你的邮箱，5 分钟内有效' });
+  const payload = { ok: true, message: '验证码已发送到你的邮箱，5 分钟内有效' };
+  if (process.env.NODE_ENV !== 'production') payload.devCode = code;
+  res.json(payload);
 });
 
 router.post('/register', async (req, res) => {

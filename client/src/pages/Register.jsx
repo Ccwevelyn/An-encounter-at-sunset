@@ -12,6 +12,7 @@ export default function Register({ onRegister }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [codeSent, setCodeSent] = useState(false);
+  const [devCode, setDevCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [codeCooldown, setCodeCooldown] = useState(0);
 
@@ -30,10 +31,11 @@ export default function Register({ onRegister }) {
     setError('');
     setLoading(true);
     try {
-      await sendRegisterCode(em);
+      const data = await sendRegisterCode(em);
       setCodeCooldown(60);
       setCodeSent(true);
       setError('');
+      if (data.devCode) setDevCode(data.devCode);
     } catch (err) {
       setError(err.message || '发送失败，请检查网络或稍后重试');
     } finally {
@@ -71,7 +73,12 @@ export default function Register({ onRegister }) {
         <p className="auth__subtitle">请先填写邮箱并点击「获取验证码」，再将邮件中的 4 位数字填入下方</p>
         <form onSubmit={handleSubmit} className="auth__form">
           {error && <p className="auth__error">{error}</p>}
-          {codeSent && !error && <p className="auth__success">验证码已发送，请查收邮件（含垃圾箱）后填入下方</p>}
+          {codeSent && !error && (
+            <p className="auth__success">
+              验证码已发送，请查收邮件（含垃圾箱）后填入下方
+              {devCode && <span className="auth__dev-code">开发环境验证码：<strong>{devCode}</strong></span>}
+            </p>
+          )}
           <label>
             <span>邮箱</span>
             <div className="auth__code-row">
