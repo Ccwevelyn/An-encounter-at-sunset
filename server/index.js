@@ -1,8 +1,10 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { readFileSync } from 'fs';
+import db from './db.js'; // 预加载 DB（PG 时跑迁移后再监听）
 import authRoutes from './routes/auth.js';
 import profileRoutes from './routes/profile.js';
 import matchRoutes from './routes/match.js';

@@ -5,10 +5,10 @@ import db from '../db.js';
 const router = Router();
 router.use(authMiddleware);
 
-router.get('/', (req, res) => {
-  const user = db.prepare('SELECT id, email, nickname FROM users WHERE id = ?').get(req.userId);
+router.get('/', async (req, res) => {
+  const user = await db.prepare('SELECT id, email, nickname FROM users WHERE id = ?').get(req.userId);
   if (!user) return res.status(404).json({ error: '用户不存在' });
-  const row = db.prepare('SELECT * FROM profiles WHERE user_id = ?').get(req.userId);
+  const row = await db.prepare('SELECT * FROM profiles WHERE user_id = ?').get(req.userId);
   if (!row) {
     return res.json({ ...user, profile: null });
   }
@@ -39,7 +39,7 @@ router.get('/', (req, res) => {
   res.json({ ...user, profile });
 });
 
-router.put('/', (req, res) => {
+router.put('/', async (req, res) => {
   const p = req.body?.profile || req.body || {};
   const safeStr = (v) => (v != null && String(v).trim() !== '' ? String(v).trim() : null);
   // 所有字段均通过参数传入，不拼接 SQL，防止注入（major、college 等均安全）
@@ -65,7 +65,7 @@ router.put('/', (req, res) => {
     fate_mode_enabled: p.fate_mode_enabled ? 1 : 0,
     random_mode_ts: p.random_mode_ts || null,
   };
-  db.prepare(`
+  await db.prepare(`
     INSERT INTO profiles (user_id, degree, gender, preferred_gender, college, major, birthday, mbti, relationship_count, longest_relationship, purpose, cities, monthly_budget, hometown_province, love_index, intro, photos, avatar, random_mode_enabled, fate_mode_enabled, random_mode_ts, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     ON CONFLICT(user_id) DO UPDATE SET
@@ -104,7 +104,7 @@ router.put('/', (req, res) => {
 const TEST_PARTNER_ID = 0;
 
 // 获取其他用户公开档案（用于匹配结果、聊天对象信息）
-router.get('/:userId', (req, res) => {
+router.get('/:userId', async (req, res) => {
   const targetId = parseInt(req.params.userId, 10);
   if (targetId === req.userId) {
     return res.json({ self: true });
@@ -112,9 +112,9 @@ router.get('/:userId', (req, res) => {
   if (targetId === TEST_PARTNER_ID) {
     return res.json({ user: { id: TEST_PARTNER_ID, nickname: 'Test' }, profile: null });
   }
-  const user = db.prepare('SELECT id, nickname FROM users WHERE id = ?').get(targetId);
+  const user = await db.prepare('SELECT id, nickname FROM users WHERE id = ?').get(targetId);
   if (!user) return res.status(404).json({ error: '用户不存在' });
-  const profile = db.prepare('SELECT * FROM profiles WHERE user_id = ?').get(targetId);
+  const profile = await db.prepare('SELECT * FROM profiles WHERE user_id = ?').get(targetId);
   if (!profile) return res.status(404).json({ error: '该用户未完善资料' });
   const { password_hash, ...rest } = user;
   let cities = profile.cities;

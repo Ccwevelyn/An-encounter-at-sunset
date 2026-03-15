@@ -47,23 +47,23 @@ function rowForList(name, row) {
 }
 
 // 表结构 + 数据（列表：不含大图/密码全文）
-router.get('/table/:name', (req, res) => {
+router.get('/table/:name', async (req, res) => {
   const name = req.params.name;
   if (!ALLOWED_TABLES.includes(name)) {
     return res.status(400).json({ error: 'Invalid table' });
   }
   try {
-    const columns = db.prepare(`PRAGMA table_info(${name})`).all();
-    const rows = db.prepare(`SELECT * FROM ${name}`).all();
+    const columns = await db.getTableInfo(name);
+    const rows = await db.prepare(`SELECT * FROM ${name}`).all();
     const rowsForList = rows.map((r) => rowForList(name, r));
-    res.json({ columns: columns.map((c) => ({ name: c.name, type: c.type })), rows: rowsForList });
+    res.json({ columns: columns.map((c) => ({ name: c.name, type: c.type || '' })), rows: rowsForList });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
 // 单行完整数据（编辑用）
-router.get('/table/:name/row/:pkVal', (req, res) => {
+router.get('/table/:name/row/:pkVal', async (req, res) => {
   const name = req.params.name;
   const pkVal = req.params.pkVal;
   if (!ALLOWED_TABLES.includes(name)) {
@@ -71,7 +71,7 @@ router.get('/table/:name/row/:pkVal', (req, res) => {
   }
   const pk = PK_COL[name];
   try {
-    const row = db.prepare(`SELECT * FROM ${name} WHERE ${pk} = ?`).get(pkVal);
+    const row = await db.prepare(`SELECT * FROM ${name} WHERE ${pk} = ?`).get(pkVal);
     if (!row) return res.status(404).json({ error: 'Not found' });
     res.json(row);
   } catch (e) {
@@ -80,7 +80,7 @@ router.get('/table/:name/row/:pkVal', (req, res) => {
 });
 
 // 更新一行（body: { id 或 user_id, ...fields }）
-router.post('/table/:name/row', (req, res) => {
+router.post('/table/:name/row', async (req, res) => {
   const name = req.params.name;
   if (!ALLOWED_TABLES.includes(name)) {
     return res.status(400).json({ error: 'Invalid table' });
@@ -91,7 +91,7 @@ router.post('/table/:name/row', (req, res) => {
   if (id == null) {
     return res.status(400).json({ error: `Missing ${pk}` });
   }
-  const columns = db.prepare(`PRAGMA table_info(${name})`).all();
+  const columns = await db.getTableInfo(name);
   const colNames = columns.map((c) => c.name).filter((n) => n !== pk);
   const updates = [];
   const values = [];
@@ -106,7 +106,7 @@ router.post('/table/:name/row', (req, res) => {
   }
   values.push(id);
   try {
-    db.prepare(`UPDATE ${name} SET ${updates.join(', ')} WHERE ${pk} = ?`).run(...values);
+    await db.prepare(`UPDATE ${name} SET ${updates.join(', ')} WHERE ${pk} = ?`).run(...values);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -114,7 +114,7 @@ router.post('/table/:name/row', (req, res) => {
 });
 
 // 删除一行（body: { id 或 user_id }）
-router.post('/table/:name/row/delete', (req, res) => {
+router.post('/table/:name/row/delete', async (req, res) => {
   const name = req.params.name;
   if (!ALLOWED_TABLES.includes(name)) {
     return res.status(400).json({ error: 'Invalid table' });
@@ -125,7 +125,7 @@ router.post('/table/:name/row/delete', (req, res) => {
     return res.status(400).json({ error: `Missing ${pk}` });
   }
   try {
-    db.prepare(`DELETE FROM ${name} WHERE ${pk} = ?`).run(id);
+    await db.prepare(`DELETE FROM ${name} WHERE ${pk} = ?`).run(id);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });

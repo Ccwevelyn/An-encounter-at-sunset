@@ -105,15 +105,15 @@ function acceptsGender(preferred, otherGender) {
 }
 
 // 随机匹配：可选择是否开启随机匹配状态，开启后即可被匹配；双向性别过滤，再随机一人
-router.post('/random/join', (req, res) => {
-  const myProfile = db.prepare('SELECT random_mode_enabled, gender, preferred_gender FROM profiles WHERE user_id = ?').get(req.userId);
+router.post('/random/join', async (req, res) => {
+  const myProfile = await db.prepare('SELECT random_mode_enabled, gender, preferred_gender FROM profiles WHERE user_id = ?').get(req.userId);
   if (!myProfile) {
     return res.status(400).json({ error: '请先完善个人资料' });
   }
   const now = new Date().toISOString();
-  db.prepare('UPDATE profiles SET random_mode_enabled = 1, random_mode_ts = ? WHERE user_id = ?').run(now, req.userId);
+  await db.prepare('UPDATE profiles SET random_mode_enabled = 1, random_mode_ts = ? WHERE user_id = ?').run(now, req.userId);
 
-  const all = db.prepare(`
+  const all = await db.prepare(`
     SELECT p.user_id, p.gender, p.preferred_gender
     FROM profiles p
     WHERE p.user_id != ? AND p.random_mode_enabled = 1
@@ -131,9 +131,9 @@ router.post('/random/join', (req, res) => {
   const userA = Math.min(req.userId, partner.user_id);
   const userB = Math.max(req.userId, partner.user_id);
   try {
-    db.prepare('INSERT INTO matches (user_a, user_b, mode) VALUES (?, ?, ?)').run(userA, userB, 'random');
+    await db.prepare('INSERT INTO matches (user_a, user_b, mode) VALUES (?, ?, ?)').run(userA, userB, 'random');
   } catch (e) {
-    if (e.code === 'SQLITE_CONSTRAINT') {
+    if (e.code === 'SQLITE_CONSTRAINT' || e.code === '23505') {
       return res.json({ matched: true, partnerId: partner.user_id, existing: true });
     }
     throw e;
@@ -141,14 +141,14 @@ router.post('/random/join', (req, res) => {
   return res.json({ matched: true, partnerId: partner.user_id });
 });
 
-router.post('/fate', (req, res) => {
-  const myProfile = db.prepare('SELECT * FROM profiles WHERE user_id = ?').get(req.userId);
+router.post('/fate', async (req, res) => {
+  const myProfile = await db.prepare('SELECT * FROM profiles WHERE user_id = ?').get(req.userId);
   if (!myProfile) {
     return res.status(400).json({ error: '请先完善个人资料' });
   }
 
   const purpose = myProfile.purpose;
-  const allProfiles = db.prepare(`
+  const allProfiles = await db.prepare(`
     SELECT p.*, u.nickname
     FROM profiles p
     JOIN users u ON u.id = p.user_id
@@ -223,9 +223,9 @@ router.post('/fate', (req, res) => {
   const userA = Math.min(req.userId, chosen.user_id);
   const userB = Math.max(req.userId, chosen.user_id);
   try {
-    db.prepare('INSERT INTO matches (user_a, user_b, mode) VALUES (?, ?, ?)').run(userA, userB, 'fate');
+    await db.prepare('INSERT INTO matches (user_a, user_b, mode) VALUES (?, ?, ?)').run(userA, userB, 'fate');
   } catch (e) {
-    if (e.code === 'SQLITE_CONSTRAINT') {
+    if (e.code === 'SQLITE_CONSTRAINT' || e.code === '23505') {
       return res.json({ matched: true, partnerId: chosen.user_id, existing: true });
     }
     throw e;
@@ -234,12 +234,12 @@ router.post('/fate', (req, res) => {
 });
 
 // 灵魂共鸣：3–5 道主观题，用户文字回答，后续可接 AI 分析匹配
-router.get('/soul/questions', (req, res) => {
-  const rows = db.prepare('SELECT id, question, sort_order FROM soul_questions ORDER BY sort_order, id').all();
+router.get('/soul/questions', async (req, res) => {
+  const rows = await db.prepare('SELECT id, question, sort_order FROM soul_questions ORDER BY sort_order, id').all();
   res.json({ questions: rows });
 });
 
-router.post('/soul/answers', (req, res) => {
+router.post('/soul/answers', async (req, res) => {
   const answers = req.body?.answers;
   if (!Array.isArray(answers) || answers.length === 0) {
     return res.status(400).json({ error: '请至少回答一题' });
@@ -248,28 +248,28 @@ router.post('/soul/answers', (req, res) => {
     const qId = a.questionId ?? a.question_id;
     const text = a.answer != null ? String(a.answer).trim() : '';
     if (!qId || text === '') continue;
-    db.prepare(`
-      INSERT OR REPLACE INTO soul_answers (user_id, question_id, answer) VALUES (?, ?, ?)
-    `).run(req.userId, qId, text);
+    await db.prepare('DELETE FROM soul_answers WHERE user_id = ? AND question_id = ?').run(req.userId, qId);
+    await db.prepare('INSERT INTO soul_answers (user_id, question_id, answer) VALUES (?, ?, ?)').run(req.userId, qId, text);
   }
   res.json({ ok: true });
 });
 
-router.post('/soul', (req, res) => {
-  const myProfile = db.prepare('SELECT * FROM profiles WHERE user_id = ?').get(req.userId);
+router.post('/soul', async (req, res) => {
+  const myProfile = await db.prepare('SELECT * FROM profiles WHERE user_id = ?').get(req.userId);
   if (!myProfile) {
     return res.status(400).json({ error: '请先完善个人资料' });
   }
   const myGender = myProfile.gender;
   const myPreferred = myProfile.preferred_gender;
-  const withSoul = db.prepare(`
+  const withSoulRows = await db.prepare(`
     SELECT DISTINCT user_id FROM soul_answers WHERE user_id != ?
-  `).all(req.userId).map(r => r.user_id);
+  `).all(req.userId);
+  const withSoul = withSoulRows.map(r => r.user_id);
   if (withSoul.length === 0) {
     return res.status(200).json({ matched: false, error: '暂无灵魂共鸣候选，先填写主观题或邀请更多人参与' });
   }
   const placeholders = withSoul.map(() => '?').join(',');
-  let candidates = db.prepare(`
+  let candidates = await db.prepare(`
     SELECT p.*, u.nickname FROM profiles p
     JOIN users u ON u.id = p.user_id
     WHERE p.user_id != ? AND p.user_id IN (${placeholders})
@@ -282,9 +282,9 @@ router.post('/soul', (req, res) => {
   const userA = Math.min(req.userId, chosen.user_id);
   const userB = Math.max(req.userId, chosen.user_id);
   try {
-    db.prepare('INSERT INTO matches (user_a, user_b, mode) VALUES (?, ?, ?)').run(userA, userB, 'soul');
+    await db.prepare('INSERT INTO matches (user_a, user_b, mode) VALUES (?, ?, ?)').run(userA, userB, 'soul');
   } catch (e) {
-    if (e.code === 'SQLITE_CONSTRAINT') {
+    if (e.code === 'SQLITE_CONSTRAINT' || e.code === '23505') {
       return res.json({ matched: true, partnerId: chosen.user_id, existing: true });
     }
     throw e;
@@ -295,8 +295,8 @@ router.post('/soul', (req, res) => {
 // 当前用户的所有匹配（含对方昵称，供聊天列表用）；同一对象只显示一次（去重），并默认包含 Test 机器人
 const TEST_PARTNER_ID = 0;
 
-router.get('/list', (req, res) => {
-  const rows = db.prepare(`
+router.get('/list', async (req, res) => {
+  const rows = await db.prepare(`
     SELECT m.id, m.user_a, m.user_b, m.mode, m.created_at, u.nickname AS partner_nickname
     FROM matches m
     JOIN users u ON u.id = (CASE WHEN m.user_a = ? THEN m.user_b ELSE m.user_a END)
@@ -308,7 +308,8 @@ router.get('/list', (req, res) => {
     const partnerId = r.user_a === req.userId ? r.user_b : r.user_a;
     if (byPartner.has(partnerId)) continue;
     const fromRow = r.partner_nickname ?? r.partner_Nickname ?? r.PARTNER_NICKNAME;
-    const partnerNickname = fromRow ?? db.prepare('SELECT nickname FROM users WHERE id = ?').get(partnerId)?.nickname ?? null;
+    const u = await db.prepare('SELECT nickname FROM users WHERE id = ?').get(partnerId);
+    const partnerNickname = fromRow ?? u?.nickname ?? null;
     byPartner.set(partnerId, {
       matchId: r.id,
       partnerId,

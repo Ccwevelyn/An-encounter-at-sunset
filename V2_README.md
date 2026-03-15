@@ -31,6 +31,12 @@
      - 注册接口改为：先验证邮箱再允许设置昵称/密码。  
    - 当前注册仍为「邮箱 + 昵称 + 密码」，未强制邮箱验证；要启用需自行接好发信与上述接口。
 
+8. **验证码登录（Resend）**  
+   - 已建表 `login_codes`（email, code, expires_at）。  
+   - `POST /api/auth/send-login-code`：body `{ email }`，仅限已注册的 @mpu.edu.mo 邮箱，发送 4 位验证码到邮箱，5 分钟有效。  
+   - `POST /api/auth/login-with-code`：body `{ email, code }`，验证通过后返回 token，与密码登录返回格式一致。  
+   - **环境变量**：`RESEND_API_KEY`（必填，[Resend API Keys](https://resend.com/api-keys) 创建）、`RESEND_FROM`（选填，默认 `日落相遇 <onboarding@resend.dev>`；正式环境建议验证域名后改为自己的发件地址）。
+
 ---
 
 ## 未完成（需你本地/部署完成的）
@@ -45,11 +51,12 @@
   4. 所有使用 `db` 的路由改为 `async/await` 调用该抽象层。  
 - 完成后，设置 `DATABASE_URL` 即会使用 PostgreSQL，且按当前逻辑会**自动不再提供** `/admin` 管理页。
 
-### 邮箱认证完整流程
+### 邮箱认证完整流程（注册前验证链接）
 
 - 表已就绪，需你：  
   - 配置发信（如 `RESEND_API_KEY` 或 SMTP）；  
-  - 实现发验证邮件、验证链接、以及注册时校验 token 的逻辑（见上文接口说明）。
+  - 实现发验证邮件、验证链接、以及注册时校验 token 的逻辑（见上文接口说明）。  
+- **验证码登录**已实现：配置 `RESEND_API_KEY` 后即可使用「发送验证码 → 验证码登录」。
 
 ### DeepSeek 集成（Test 机器人 + 可选灵魂匹配）
 
