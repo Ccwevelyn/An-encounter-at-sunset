@@ -76,10 +76,13 @@
   display: flex;
   width: 100%;
   justify-content: flex-start;
+  box-sizing: border-box;
 }
 
-.chat-page__msg.mine {
-  justify-content: flex-end;
+/* 自己发的消息在右侧 */
+.chat-page__msg.mine,
+.chat-page__msg.chat-page__msg--mine {
+  justify-content: flex-end !important;
 }
 
 .chat-page__bubble {
@@ -89,7 +92,8 @@
   max-width: 85%;
 }
 
-.chat-page__msg.mine .chat-page__bubble {
+.chat-page__msg.mine .chat-page__bubble,
+.chat-page__msg.chat-page__msg--mine .chat-page__bubble {
   align-items: flex-end;
 }
 
@@ -102,7 +106,8 @@
   word-break: break-word;
 }
 
-.chat-page__msg.mine .chat-page__msg-content {
+.chat-page__msg.mine .chat-page__msg-content,
+.chat-page__msg.chat-page__msg--mine .chat-page__msg-content {
   background: var(--accent);
   border-color: var(--accent);
   color: #0d0d0d;

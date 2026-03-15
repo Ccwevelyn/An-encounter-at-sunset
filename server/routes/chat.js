@@ -79,15 +79,16 @@ const BOT_FIRST_MSG = {
 
 router.get('/:partnerId', async (req, res) => {
   const partnerId = parseInt(req.params.partnerId, 10);
+  const currentUserId = req.userId != null ? Number(req.userId) : null;
   if (isBot(partnerId)) {
     const key = storeKey(req.userId, partnerId);
     const list = botChatStore.get(key)?.messages ?? [];
-    // 导师(0)：无历史时先返回首句「hello,我是王哥」
+    // 导师(0)：无历史时必须返回首句「hello,我是王哥」
     if (partnerId === 0 && list.length === 0) {
-      return res.json({ messages: [BOT_FIRST_MSG[0]] });
+      return res.json({ messages: [BOT_FIRST_MSG[0]], currentUserId: currentUserId });
     }
-    if (list.length === 0) return res.json({ messages: [] });
-    return res.json({ messages: list });
+    if (list.length === 0) return res.json({ messages: [], currentUserId: currentUserId });
+    return res.json({ messages: list, currentUserId: currentUserId });
   }
   const matchId = await getMatchId(req.userId, partnerId);
   if (!matchId) {
@@ -98,7 +99,7 @@ router.get('/:partnerId', async (req, res) => {
     FROM messages WHERE match_id = ?
     ORDER BY created_at ASC
   `).all(matchId);
-  res.json({ messages });
+  res.json({ messages, currentUserId: currentUserId });
 });
 
 router.post('/:partnerId', async (req, res) => {

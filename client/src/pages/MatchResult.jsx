@@ -22,10 +22,11 @@ function showValue(v) {
 
 export default function MatchResult({ user }) {
   const { partnerId } = useParams();
+  const pid = String(partnerId ?? '');
   const [partner, setPartner] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const isBot = BOT_IDS.includes(partnerId);
+  const isBot = BOT_IDS.includes(pid);
 
   useEffect(() => {
     getOtherProfile(partnerId)
@@ -39,15 +40,15 @@ export default function MatchResult({ user }) {
 
   // 三个 AI 角色（0 导师、1 看不上你对象的朋友、2 知心姐姐）：直接用本地数据展示档案，不依赖接口
   if (isBot) {
-    const name = BOT_NAMES[partnerId] || (partner?.user?.nickname) || '角色';
-    const bio = BOT_BIOS[partnerId] || '';
-    const avatarUrl = BOT_AVATAR[partnerId];
+    const name = BOT_NAMES[pid] || (partner?.user?.nickname) || '角色';
+    const bio = BOT_BIOS[pid] || '';
+    const avatarUrl = BOT_AVATAR[pid];
     return (
       <div className="match-result">
         <header className="match-result__header">
           <Link to="/chats" className="match-result__back">← 返回</Link>
           <span className="match-result__brand">角色档案</span>
-          <Link to={`/chat/${partnerId}`} className="match-result__nav-chat">与 TA 聊天</Link>
+          <Link to={`/chat/${pid}`} className="match-result__nav-chat">与 TA 聊天</Link>
         </header>
         <main className="match-result__main">
           <section className="match-result__hero">
@@ -59,7 +60,7 @@ export default function MatchResult({ user }) {
               <div className="match-result__avatar-placeholder" />
             )}
             <h1 className="match-result__name">{name}</h1>
-            <Link to={`/chat/${partnerId}`} className="match-result__chat-btn">
+            <Link to={`/chat/${pid}`} className="match-result__chat-btn">
               与 TA 聊天
             </Link>
           </section>

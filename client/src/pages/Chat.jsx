@@ -8,18 +8,21 @@ const BOT_IDS = ['0', '1', '2'];
 const BOT_SENDER_IDS = [0, 1, 2]; // 消息里 sender_id 为 0/1/2 的为 AI，显示在左侧
 const BOT_NAMES = { '0': '最伟大最尊敬的导师', '1': '看不上你对象的朋友', '2': '知心姐姐' };
 const BOT_AVATAR = { '0': mentorAvatar };
+// 导师首句，前端兜底（接口未返回时也显示）
+const MENTOR_FIRST_MSG = { id: 'first', sender_id: 0, content: 'hello,我是王哥', created_at: new Date().toISOString() };
 
 export default function Chat({ user }) {
   const { partnerId } = useParams();
-  const isBot = BOT_IDS.includes(partnerId);
+  const isBot = BOT_IDS.includes(String(partnerId));
   const backTo = isBot ? '/chats' : `/match/${partnerId}`;
   const [partner, setPartner] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [currentUserId, setCurrentUserId] = useState(null);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const listRef = useRef(null);
-  const title = isBot ? BOT_NAMES[partnerId] : (partner?.user?.nickname || '聊天');
+  const title = isBot ? (BOT_NAMES[partnerId] || '聊天') : (partner?.user?.nickname || '聊天');
 
   useEffect(() => {
     getOtherProfile(partnerId)
@@ -31,7 +34,10 @@ export default function Chat({ user }) {
 
   useEffect(() => {
     getMessages(partnerId)
-      .then((data) => setMessages(data.messages || []))
+      .then((data) => {
+        setMessages(data.messages || []);
+        if (data.currentUserId != null) setCurrentUserId(Number(data.currentUserId));
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [partnerId]);
@@ -40,7 +46,10 @@ export default function Chat({ user }) {
   useEffect(() => {
     const interval = setInterval(() => {
       getMessages(partnerId)
-        .then((data) => setMessages(data.messages || []))
+        .then((data) => {
+          setMessages(data.messages || []);
+          if (data.currentUserId != null) setCurrentUserId(Number(data.currentUserId));
+        })
         .catch(() => {});
     }, 3000);
     return () => clearInterval(interval);
@@ -68,7 +77,8 @@ export default function Chat({ user }) {
     }
   };
 
-  if (loading && !partner) {
+  // 仅真人且未拿到对方信息时显示加载；bot 直接展示页面（含头像）
+  if (!isBot && loading && !partner) {
     return (
       <div className="chat-page">
         <div className="chat-page__loading">加载中…</div>
@@ -76,15 +86,21 @@ export default function Chat({ user }) {
     );
   }
 
+  // 导师(0) 无消息时前端兜底显示首句
+  const displayMessages = isBot && partnerId === '0' && messages.length === 0
+    ? [MENTOR_FIRST_MSG]
+    : messages;
+  const myId = currentUserId != null ? Number(currentUserId) : Number(user?.id ?? user?.userId ?? 0);
+
   return (
     <div className="chat-page">
       <header className="chat-page__header">
         <Link to={backTo} className="chat-page__back">← 返回</Link>
         <div className="chat-page__title-wrap">
-          {partner?.profile?.avatar ? (
-            <img src={partner.profile.avatar} alt="" className="chat-page__avatar" />
-          ) : BOT_AVATAR[partnerId] ? (
+          {isBot && BOT_AVATAR[partnerId] ? (
             <img src={BOT_AVATAR[partnerId]} alt="" className="chat-page__avatar" />
+          ) : partner?.profile?.avatar ? (
+            <img src={partner.profile.avatar} alt="" className="chat-page__avatar" />
           ) : (
             <span className="chat-page__avatar-placeholder" />
           )}
@@ -96,14 +112,13 @@ export default function Chat({ user }) {
       </header>
 
       <ul className="chat-page__list" ref={listRef}>
-        {messages.map((msg) => {
+        {displayMessages.map((msg) => {
           const sid = msg.sender_id != null ? Number(msg.sender_id) : NaN;
-          const myId = Number(user?.id ?? user?.userId ?? 0);
           const isMine = myId > 0 && myId === sid && !BOT_SENDER_IDS.includes(sid);
           return (
           <li
-            key={`${msg.id}-${msg.created_at || ''}`}
-            className={`chat-page__msg ${isMine ? 'mine' : ''}`}
+            key={msg.id ?? `${msg.sender_id}-${msg.created_at || ''}`}
+            className={`chat-page__msg ${isMine ? 'mine chat-page__msg--mine' : ''}`}
           >
             <div className="chat-page__bubble">
               <span className="chat-page__msg-content">{msg.content}</span>

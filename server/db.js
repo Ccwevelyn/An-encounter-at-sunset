@@ -25,10 +25,10 @@ if (process.env.DATABASE_URL) {
       const hasReturning = /RETURNING\s+/i.test(sql);
       let finalSql = sql;
       if (isInsert && !hasReturning) {
-        let returningCol = 'id';
-        if (/\bINTO\s+profiles\s+/i.test(sql)) returningCol = 'user_id';
-        else if (/\bINTO\s+soul_answers\s+/i.test(sql)) returningCol = 'user_id';
-        else if (/\bINTO\s+(?:email_verifications|login_codes)\s+/i.test(sql)) returningCol = 'email'; // 主键为 email，无 id
+        const tableMatch = sql.match(/INSERT\s+INTO\s+(\w+)/i);
+        const table = tableMatch ? tableMatch[1].toLowerCase() : '';
+        const noIdReturning = { profiles: 'user_id', soul_answers: 'user_id', email_verifications: 'email', login_codes: 'email' };
+        const returningCol = noIdReturning[table] || 'id';
         finalSql = sql.replace(/;\s*$/, '') + ` RETURNING ${returningCol}`;
       }
       return {
