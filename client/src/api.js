@@ -35,6 +35,28 @@ export async function login(email, password) {
   return data;
 }
 
+export async function sendLoginCode(email) {
+  const res = await fetch(`${API}/auth/send-login-code`, {
+    method: 'POST',
+    headers: getHeaders(false),
+    body: JSON.stringify({ email: email.trim().toLowerCase() }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || '发送失败');
+  return data;
+}
+
+export async function loginWithCode(email, code) {
+  const res = await fetch(`${API}/auth/login-with-code`, {
+    method: 'POST',
+    headers: getHeaders(false),
+    body: JSON.stringify({ email: email.trim().toLowerCase(), code: String(code).trim() }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || '登录失败');
+  return data;
+}
+
 export async function getProfile() {
   const res = await fetch(`${API}/profile`, { headers: getHeaders() });
   if (res.status === 401) return null;

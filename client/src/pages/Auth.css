@@ -29,6 +29,47 @@
   margin: 0 0 1.5rem;
 }
 
+.auth__tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.auth__tab {
+  flex: 1;
+  padding: 0.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.auth__tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0d0d0d;
+  font-weight: 600;
+}
+
+.auth__code-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.auth__code-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.auth__code-btn {
+  flex-shrink: 0;
+  margin-top: 0 !important;
+  padding: 0.6rem 0.75rem !important;
+  font-size: 0.85rem !important;
+}
+
 .auth__form {
   display: flex;
   flex-direction: column;
