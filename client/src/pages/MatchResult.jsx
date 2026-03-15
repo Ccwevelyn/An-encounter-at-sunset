@@ -4,6 +4,14 @@ import { getOtherProfile } from '../api';
 import { getDegreeDisplay, getCollegeDisplay } from '../data/mpu';
 import './MatchResult.css';
 
+const BOT_IDS = ['0', '1', '2'];
+const BOT_NAMES = { '0': '最伟大最尊敬的导师', '1': '看不上你对象的朋友', '2': '知心姐姐' };
+const BOT_BIOS = {
+  '0': '一位善于提问、常给你启发的思考导师。不直接给答案，而是引导你往深处想，帮你理清思路、看见盲区。适合想被推一把、愿意被问住的人。',
+  '1': '一位嘴毒心不坏的朋友，专治恋爱脑。擅长吐槽、泼冷水、戳破幻想，用犀利话把你拉回现实。聊完可能不爽，但多半会清醒一点。',
+  '2': '一位温柔体贴的知心大姐姐。善于倾听、共情，在你难过或纠结时给安慰与建议，语气包容不说教。适合想被理解、需要情绪出口的时候。',
+};
+
 function showValue(v) {
   if (v === undefined || v === null || v === '') return '—';
   if (Array.isArray(v)) return v.length ? v.join('、') : '—';
@@ -15,6 +23,7 @@ export default function MatchResult({ user }) {
   const [partner, setPartner] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const isBot = BOT_IDS.includes(partnerId);
 
   useEffect(() => {
     getOtherProfile(partnerId)
@@ -54,9 +63,38 @@ export default function MatchResult({ user }) {
   }
 
   const { user: u, profile: p } = partner;
-  const cities = Array.isArray(p.cities) ? p.cities : (typeof p.cities === 'string' ? (() => { try { return JSON.parse(p.cities); } catch { return []; } })() : []);
-  const photos = Array.isArray(p.photos) ? p.photos : (typeof p.photos === 'string' ? (() => { try { return JSON.parse(p.photos); } catch { return []; } })() : []);
-  const avatarUrl = p.avatar || (photos.length > 0 ? photos[0] : null);
+
+  // 三个角色档案：只展示人物小传，不展示学校/专业等
+  if (isBot && !p) {
+    const name = u?.nickname || BOT_NAMES[partnerId];
+    const bio = BOT_BIOS[partnerId] || '';
+    return (
+      <div className="match-result">
+        <header className="match-result__header">
+          <Link to="/chats" className="match-result__back">← 返回</Link>
+          <span className="match-result__brand">角色档案</span>
+          <Link to={`/chat/${partnerId}`} className="match-result__nav-chat">与 TA 聊天</Link>
+        </header>
+        <main className="match-result__main">
+          <section className="match-result__hero">
+            <div className="match-result__avatar-placeholder" />
+            <h1 className="match-result__name">{name}</h1>
+            <Link to={`/chat/${partnerId}`} className="match-result__chat-btn">
+              与 TA 聊天
+            </Link>
+          </section>
+          <section className="match-result__card match-result__intro">
+            <h2 className="match-result__card-title">人物小传</h2>
+            <p className="match-result__intro-text">{bio}</p>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  const cities = Array.isArray(p?.cities) ? p.cities : (typeof p?.cities === 'string' ? (() => { try { return JSON.parse(p.cities); } catch { return []; } })() : []);
+  const photos = Array.isArray(p?.photos) ? p.photos : (typeof p?.photos === 'string' ? (() => { try { return JSON.parse(p.photos); } catch { return []; } })() : []);
+  const avatarUrl = p?.avatar || (photos.length > 0 ? photos[0] : null);
 
   const basicItems = [
     { label: '学位', value: getDegreeDisplay(p.degree) },

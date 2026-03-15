@@ -49,6 +49,16 @@
   font-weight: 600;
 }
 
+.chat-page__profile-link {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+.chat-page__profile-link:hover {
+  text-decoration: underline;
+}
+
 .chat-page__list {
   flex: 1;
   overflow-y: auto;

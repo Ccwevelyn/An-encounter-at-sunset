@@ -19,7 +19,7 @@ export default function Register({ onRegister }) {
     e.preventDefault();
     setError('');
     if (!isSchoolEmail(email)) {
-      setError('邮箱须为 P + 7 位数字 + @mpu.edu.mo，如 P1234567@mpu.edu.mo');
+      setError('为打造更好的交流环境，请填写真实的邮箱');
       return;
     }
     setLoading(true);

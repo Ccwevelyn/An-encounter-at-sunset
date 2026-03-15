@@ -19,7 +19,7 @@ router.post('/register', async (req, res) => {
   }
   const trimmedEmail = String(email).trim().toLowerCase();
   if (!isSchoolEmail(trimmedEmail)) {
-    return res.status(400).json({ error: '邮箱须为 P + 7 位数字 + @mpu.edu.mo，如 P1234567@mpu.edu.mo', code: 'EMAIL_INVALID' });
+    return res.status(400).json({ error: '为打造更好的交流环境，请填写真实的邮箱', code: 'EMAIL_INVALID' });
   }
   const trimmedNickname = String(nickname).trim();
   const existing = await db.prepare('SELECT id FROM users WHERE email = ? OR nickname = ?').get(trimmedEmail, trimmedNickname);
@@ -44,7 +44,7 @@ router.post('/login', async (req, res) => {
   }
   const trimmedEmail = String(email).trim().toLowerCase();
   if (!isSchoolEmail(trimmedEmail)) {
-    return res.status(401).json({ error: '邮箱格式无效，须为 P + 7 位数字 + @mpu.edu.mo' });
+    return res.status(401).json({ error: '为打造更好的交流环境，请填写真实的邮箱' });
   }
   const user = await db.prepare('SELECT id, nickname, password_hash FROM users WHERE email = ?').get(trimmedEmail);
   if (!user) {

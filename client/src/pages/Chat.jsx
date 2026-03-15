@@ -3,14 +3,20 @@ import { Link, useParams } from 'react-router-dom';
 import { getOtherProfile, getMessages, sendMessage } from '../api';
 import './Chat.css';
 
+const BOT_IDS = ['0', '1', '2'];
+const BOT_NAMES = { '0': '最伟大最尊敬的导师', '1': '看不上你对象的朋友', '2': '知心姐姐' };
+
 export default function Chat({ user }) {
   const { partnerId } = useParams();
+  const isBot = BOT_IDS.includes(partnerId);
+  const backTo = isBot ? '/chats' : `/match/${partnerId}`;
   const [partner, setPartner] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const listRef = useRef(null);
+  const title = isBot ? BOT_NAMES[partnerId] : (partner?.user?.nickname || '聊天');
 
   useEffect(() => {
     getOtherProfile(partnerId)
@@ -70,14 +76,17 @@ export default function Chat({ user }) {
   return (
     <div className="chat-page">
       <header className="chat-page__header">
-        <Link to={partnerId === '0' ? '/chats' : `/match/${partnerId}`} className="chat-page__back">← 返回</Link>
+        <Link to={backTo} className="chat-page__back">← 返回</Link>
         <div className="chat-page__title-wrap">
           {partner?.profile?.avatar ? (
             <img src={partner.profile.avatar} alt="" className="chat-page__avatar" />
           ) : (
             <span className="chat-page__avatar-placeholder" />
           )}
-          <span className="chat-page__title">{partner?.user?.nickname || '聊天'}</span>
+          <span className="chat-page__title">{title}</span>
+          {isBot && (
+            <Link to={`/match/${partnerId}`} className="chat-page__profile-link">角色档案</Link>
+          )}
         </div>
       </header>
 

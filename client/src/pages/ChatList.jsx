@@ -30,6 +30,21 @@ export default function ChatList({ user, onLogout }) {
   }, [list]);
 
   const displayName = (item) => item.partnerNickname || partnerNames[item.partnerId] || null;
+  const isBot = (id) => [0, 1, 2].includes(Number(id));
+  const botList = list.filter((item) => isBot(item.partnerId));
+  const realList = list.filter((item) => !isBot(item.partnerId));
+
+  const renderItem = (item) => (
+    <li key={item.matchId} className="chat-list-page__item">
+      <Link to={`/chat/${item.partnerId}`} className="chat-list-page__link">
+        <span className="chat-list-page__name">{displayName(item) || `用户 ${item.partnerId}`}</span>
+        <span className="chat-list-page__arrow">→</span>
+      </Link>
+      {isBot(item.partnerId) && (
+        <Link to={`/match/${item.partnerId}`} className="chat-list-page__profile-link">档案</Link>
+      )}
+    </li>
+  );
 
   return (
     <div className="chat-list-page">
@@ -42,19 +57,25 @@ export default function ChatList({ user, onLogout }) {
       <main className="chat-list-page__main">
         {loading ? (
           <p className="chat-list-page__loading">加载中…</p>
-        ) : list.length === 0 ? (
-          <p className="chat-list-page__empty">暂无聊天对象，去匹配一个吧。</p>
         ) : (
-          <ul className="chat-list-page__list">
-            {list.map((item) => (
-              <li key={item.matchId} className="chat-list-page__item">
-                <Link to={`/chat/${item.partnerId}`} className="chat-list-page__link">
-                  <span className="chat-list-page__name">{displayName(item) || `用户 ${item.partnerId}`}</span>
-                  <span className="chat-list-page__arrow">→</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <>
+            <section className="chat-list-page__block">
+              <h2 className="chat-list-page__block-title">我的 AI</h2>
+              <ul className="chat-list-page__list">
+                {botList.map(renderItem)}
+              </ul>
+            </section>
+            <section className="chat-list-page__block">
+              <h2 className="chat-list-page__block-title">真人</h2>
+              {realList.length === 0 ? (
+                <p className="chat-list-page__empty">暂无匹配的真人，去匹配一个吧。</p>
+              ) : (
+                <ul className="chat-list-page__list">
+                  {realList.map(renderItem)}
+                </ul>
+              )}
+            </section>
+          </>
         )}
       </main>
     </div>
