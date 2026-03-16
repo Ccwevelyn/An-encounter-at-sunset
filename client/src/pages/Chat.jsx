@@ -114,12 +114,12 @@ export default function Chat({ user }) {
 
       <ul className="chat-page__list" ref={listRef}>
         {displayMessages.map((msg, idx) => {
-          const fromBackend = typeof msg.isMine === 'boolean';
-          const mine = fromBackend
-            ? msg.isMine
-            : isBot
-              ? isMineInBotChat(msg, myId)
-              : isMineMessage(msg, myId);
+          const mine =
+            typeof msg.isMine === 'boolean'
+              ? msg.isMine
+              : isBot
+                ? isMineInBotChat(msg, myId)
+                : isMineMessage(msg, myId);
           return (
             <li
               key={msg.id != null ? `msg-${msg.id}` : `msg-${idx}-${msg.sender_id}-${msg.created_at ?? ''}`}

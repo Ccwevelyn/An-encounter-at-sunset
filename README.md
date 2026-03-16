@@ -81,8 +81,7 @@
 │   ├── admin.html          # 本地数据库管理页
 │   └── package.json
 ├── package.json            # 根脚本 install:all、build、start
-├── render.yaml             # Render 部署配置
-├── README.md、DEPLOY.md
+├── README.md
 └── .gitignore
 ```
 
