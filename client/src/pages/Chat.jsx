@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getOtherProfile, getMessages, sendMessage } from '../api';
-import { BOT_NAMES, isBotId, isMineMessage, isMineInBotChat } from '../constants/chat';
+import { BOT_NAMES, isBotId } from '../constants/chat';
+
+function mergeMyOther(myMessages, otherMessages) {
+  const withMine = (myMessages || []).map((m) => ({ ...m, isMine: true }));
+  const withOther = (otherMessages || []).map((m) => ({ ...m, isMine: false }));
+  return [...withMine, ...withOther].sort(
+    (a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0)
+  );
+}
 import mentorAvatar from '../assets/mentor-avatar.png';
 import './Chat.css';
 
@@ -28,9 +36,6 @@ export default function Chat({ user }) {
 
   const title = isBot ? (BOT_NAMES[Number(partnerId)] || '聊天') : (partner?.user?.nickname || '聊天');
 
-  // 当前用户 id：优先用登录/档案返回的 user.id，保证首屏渲染就能正确左右分边
-  const myId = Math.max(0, Number(user?.id ?? user?.userId ?? currentUserId ?? 0) || 0);
-
   useEffect(() => {
     if (isBot) return;
     getOtherProfile(partnerId)
@@ -41,7 +46,11 @@ export default function Chat({ user }) {
   useEffect(() => {
     getMessages(partnerId)
       .then((data) => {
-        setMessages(data.messages || []);
+        if (data.myMessages != null && data.otherMessages != null) {
+          setMessages(mergeMyOther(data.myMessages, data.otherMessages));
+        } else {
+          setMessages(data.messages || []);
+        }
         if (data.currentUserId != null) setCurrentUserId(Number(data.currentUserId));
       })
       .catch(() => setMessages([]))
@@ -52,7 +61,11 @@ export default function Chat({ user }) {
     const t = setInterval(() => {
       getMessages(partnerId)
         .then((data) => {
-          setMessages(data.messages || []);
+          if (data.myMessages != null && data.otherMessages != null) {
+            setMessages(mergeMyOther(data.myMessages, data.otherMessages));
+          } else {
+            setMessages(data.messages || []);
+          }
           if (data.currentUserId != null) setCurrentUserId(Number(data.currentUserId));
         })
         .catch(() => {});
@@ -73,7 +86,9 @@ export default function Chat({ user }) {
       const data = await sendMessage(partnerId, text);
       if (data.currentUserId != null) setCurrentUserId(Number(data.currentUserId));
       const botList = data.botMessages || (data.botMessage ? [data.botMessage] : []);
-      setMessages((m) => [...m, data.message, ...botList]);
+      const mine = { ...data.message, isMine: true };
+      const others = botList.map((b) => ({ ...b, isMine: false }));
+      setMessages((m) => [...m, mine, ...others]);
       setInput('');
     } catch (err) {
       console.error(err);
@@ -91,7 +106,9 @@ export default function Chat({ user }) {
   }
 
   const displayMessages =
-    isBot && partnerId === '0' && messages.length === 0 ? [MENTOR_FIRST_MSG] : messages;
+    isBot && partnerId === '0' && messages.length === 0
+      ? [{ ...MENTOR_FIRST_MSG, isMine: false }]
+      : messages;
 
   return (
     <div className="chat-page">
@@ -114,12 +131,7 @@ export default function Chat({ user }) {
 
       <ul className="chat-page__list" ref={listRef}>
         {displayMessages.map((msg, idx) => {
-          const mine =
-            typeof msg.isMine === 'boolean'
-              ? msg.isMine
-              : isBot
-                ? isMineInBotChat(msg, myId)
-                : isMineMessage(msg, myId);
+          const mine = msg.isMine === true;
           return (
             <li
               key={msg.id != null ? `msg-${msg.id}` : `msg-${idx}-${msg.sender_id}-${msg.created_at ?? ''}`}
