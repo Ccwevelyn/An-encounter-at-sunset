@@ -116,7 +116,7 @@ function withIsMine(messages, currentUserId) {
   const uid = Number(currentUserId);
   return messages.map((m) => {
     const sid = m.sender_id != null ? Number(m.sender_id) : null;
-    const isMine = uid > 0 && sid === uid && !BOT_IDS.includes(sid);
+    const isMine = uid > 0 && sid != null && sid === uid;
     return { ...m, sender_id: sid, isMine };
   });
 }

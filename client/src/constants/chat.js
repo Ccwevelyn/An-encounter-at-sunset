@@ -20,9 +20,15 @@ export function isMineMessage(msg, myId) {
   return sid === myId;
 }
 
-/** 和 bot 聊天时：sender_id 不是 0/1/2 就是自己发的，不依赖 currentUserId */
-export function isMineInBotChat(msg) {
+/**
+ * 和 bot 聊天时判断是否自己发的：
+ * - 有 myId 时用 sender_id === myId（避免用户 id 为 1/2 时被当成 bot）
+ * - 无 myId 时用 sender_id 不在 0/1/2
+ */
+export function isMineInBotChat(msg, myId) {
   const sid = msg.sender_id != null ? Number(msg.sender_id) : NaN;
   if (Number.isNaN(sid)) return false;
-  return !BOT_IDS.includes(sid);
+  if (BOT_IDS.includes(sid)) return false;
+  if (myId > 0) return sid === myId;
+  return true;
 }

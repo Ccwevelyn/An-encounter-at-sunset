@@ -118,16 +118,19 @@ export default function Chat({ user }) {
           const mine = fromBackend
             ? msg.isMine
             : isBot
-              ? isMineInBotChat(msg)
+              ? isMineInBotChat(msg, myId)
               : isMineMessage(msg, myId);
           return (
             <li
               key={msg.id != null ? `msg-${msg.id}` : `msg-${idx}-${msg.sender_id}-${msg.created_at ?? ''}`}
               className={`chat-page__msg ${mine ? 'chat-page__msg--mine' : 'chat-page__msg--other'}`}
               data-mine={mine}
-              style={mine ? { justifyContent: 'flex-end' } : { justifyContent: 'flex-start' }}
+              style={mine ? { justifyContent: 'flex-end', flexDirection: 'row' } : { justifyContent: 'flex-start' }}
             >
-              <div className="chat-page__bubble" style={mine ? { marginLeft: 'auto', marginRight: 0 } : undefined}>
+              <div
+                className="chat-page__bubble"
+                style={mine ? { marginLeft: 'auto', marginRight: 0, maxWidth: '85%' } : undefined}
+              >
                 <span className="chat-page__msg-content">{msg.content}</span>
                 <span className="chat-page__msg-time">
                   {msg.created_at
