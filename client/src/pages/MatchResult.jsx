@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import { getOtherProfile, getMatchWith } from '../api';
 import { getDegreeDisplay, getCollegeDisplay } from '../data/mpu';
+import { BOT_NAMES, isBotId } from '../constants/chat';
 import mentorAvatar from '../assets/mentor-avatar.png';
 import './MatchResult.css';
 
-const BOT_IDS = ['0', '1', '2'];
-const BOT_NAMES = { '0': '最伟大最尊敬的导师', '1': '看不上你对象的朋友', '2': '知心姐姐' };
 const BOT_AVATAR = { '0': mentorAvatar };
 const BOT_BIOS = {
   '0': '一位善于提问、常给你启发的思考导师。不直接给答案，而是引导你往深处想，帮你理清思路、看见盲区。适合想被推一把、愿意被问住的人。',
@@ -28,7 +27,7 @@ export default function MatchResult({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [matchReason, setMatchReason] = useState(location.state?.matchReason ?? null);
-  const isBot = BOT_IDS.includes(pid);
+  const isBot = isBotId(partnerId);
 
   useEffect(() => {
     getOtherProfile(partnerId)

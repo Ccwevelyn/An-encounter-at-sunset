@@ -166,7 +166,7 @@ router.post('/:partnerId', async (req, res) => {
   }
   const result = await db.prepare('INSERT INTO messages (match_id, sender_id, content) VALUES (?, ?, ?)').run(matchId, req.userId, String(content).trim());
   const row = await db.prepare('SELECT id, match_id, sender_id, content, created_at FROM messages WHERE id = ?').get(result.lastInsertRowid);
-  res.json({ message: row });
+  res.json({ message: row, currentUserId: Number(req.userId) });
 });
 
 export default router;

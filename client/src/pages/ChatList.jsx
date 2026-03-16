@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getMatchList, getOtherProfile } from '../api';
+import { isBotId } from '../constants/chat';
 import './ChatList.css';
 
 export default function ChatList({ user, onLogout }) {
@@ -30,9 +31,8 @@ export default function ChatList({ user, onLogout }) {
   }, [list]);
 
   const displayName = (item) => item.partnerNickname || partnerNames[item.partnerId] || null;
-  const isBot = (id) => [0, 1, 2].includes(Number(id));
-  const botList = list.filter((item) => isBot(item.partnerId));
-  const realList = list.filter((item) => !isBot(item.partnerId));
+  const botList = list.filter((item) => isBotId(item.partnerId));
+  const realList = list.filter((item) => !isBotId(item.partnerId));
 
   const renderItem = (item) => (
     <li key={item.matchId} className="chat-list-page__item">
@@ -40,7 +40,7 @@ export default function ChatList({ user, onLogout }) {
         <span className="chat-list-page__name">{displayName(item) || `用户 ${item.partnerId}`}</span>
         <span className="chat-list-page__arrow">→</span>
       </Link>
-      {isBot(item.partnerId) && (
+      {isBotId(item.partnerId) && (
         <Link to={`/match/${item.partnerId}`} className="chat-list-page__profile-link">档案</Link>
       )}
     </li>

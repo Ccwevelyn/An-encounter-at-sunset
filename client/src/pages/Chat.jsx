@@ -1,20 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getOtherProfile, getMessages, sendMessage } from '../api';
+import { BOT_NAMES, isBotId, isMineMessage } from '../constants/chat';
 import mentorAvatar from '../assets/mentor-avatar.png';
 import './Chat.css';
 
-const BOT_IDS = ['0', '1', '2'];
-const BOT_SENDER_IDS = [0, 1, 2]; // 消息里 sender_id 为 0/1/2 的为 AI，显示在左侧
-const BOT_NAMES = { '0': '最伟大最尊敬的导师', '1': '看不上你对象的朋友', '2': '知心姐姐' };
+const MENTOR_FIRST_MSG = {
+  id: 'first',
+  sender_id: 0,
+  content: 'hello,我是王哥',
+  created_at: new Date().toISOString(),
+};
 const BOT_AVATAR = { '0': mentorAvatar };
-// 导师首句，前端兜底（接口未返回时也显示）
-const MENTOR_FIRST_MSG = { id: 'first', sender_id: 0, content: 'hello,我是王哥', created_at: new Date().toISOString() };
 
 export default function Chat({ user }) {
   const { partnerId } = useParams();
-  const isBot = BOT_IDS.includes(String(partnerId));
+  const isBot = isBotId(partnerId);
   const backTo = isBot ? '/chats' : `/match/${partnerId}`;
+
   const [partner, setPartner] = useState(null);
   const [messages, setMessages] = useState([]);
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -22,15 +25,18 @@ export default function Chat({ user }) {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const listRef = useRef(null);
-  const title = isBot ? (BOT_NAMES[partnerId] || '聊天') : (partner?.user?.nickname || '聊天');
+
+  const title = isBot ? (BOT_NAMES[Number(partnerId)] || '聊天') : (partner?.user?.nickname || '聊天');
+
+  // 当前用户 id：优先用登录/档案返回的 user.id，保证首屏渲染就能正确左右分边
+  const myId = Math.max(0, Number(user?.id ?? user?.userId ?? currentUserId ?? 0) || 0);
 
   useEffect(() => {
+    if (isBot) return;
     getOtherProfile(partnerId)
-      .then((data) => {
-        if (!data.self) setPartner(data);
-      })
+      .then((data) => { if (!data.self) setPartner(data); })
       .catch(() => {});
-  }, [partnerId]);
+  }, [partnerId, isBot]);
 
   useEffect(() => {
     getMessages(partnerId)
@@ -38,13 +44,12 @@ export default function Chat({ user }) {
         setMessages(data.messages || []);
         if (data.currentUserId != null) setCurrentUserId(Number(data.currentUserId));
       })
-      .catch(() => {})
+      .catch(() => setMessages([]))
       .finally(() => setLoading(false));
   }, [partnerId]);
 
-  // 轮询：对方发来的新消息能在本页显示
   useEffect(() => {
-    const interval = setInterval(() => {
+    const t = setInterval(() => {
       getMessages(partnerId)
         .then((data) => {
           setMessages(data.messages || []);
@@ -52,7 +57,7 @@ export default function Chat({ user }) {
         })
         .catch(() => {});
     }, 3000);
-    return () => clearInterval(interval);
+    return () => clearInterval(t);
   }, [partnerId]);
 
   useEffect(() => {
@@ -77,7 +82,6 @@ export default function Chat({ user }) {
     }
   };
 
-  // 仅真人且未拿到对方信息时显示加载；bot 直接展示页面（含头像）
   if (!isBot && loading && !partner) {
     return (
       <div className="chat-page">
@@ -86,11 +90,8 @@ export default function Chat({ user }) {
     );
   }
 
-  // 导师(0) 无消息时前端兜底显示首句
-  const displayMessages = isBot && partnerId === '0' && messages.length === 0
-    ? [MENTOR_FIRST_MSG]
-    : messages;
-  const myId = (currentUserId != null && currentUserId !== 0) ? Number(currentUserId) : Number(user?.id ?? user?.userId ?? 0) || 0;
+  const displayMessages =
+    isBot && partnerId === '0' && messages.length === 0 ? [MENTOR_FIRST_MSG] : messages;
 
   return (
     <div className="chat-page">
@@ -113,20 +114,25 @@ export default function Chat({ user }) {
 
       <ul className="chat-page__list" ref={listRef}>
         {displayMessages.map((msg) => {
-          const sid = msg.sender_id != null ? Number(msg.sender_id) : NaN;
-          const isMine = myId > 0 && myId === sid && !BOT_SENDER_IDS.includes(sid);
+          const mine = isMineMessage(msg, myId);
           return (
-          <li
-            key={msg.id ?? `${msg.sender_id}-${msg.created_at || ''}`}
-            className={`chat-page__msg ${isMine ? 'chat-page__msg--mine' : 'chat-page__msg--other'}`}
-          >
-            <div className="chat-page__bubble">
-              <span className="chat-page__msg-content">{msg.content}</span>
-              <span className="chat-page__msg-time">
-                {msg.created_at ? new Date(msg.created_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : ''}
-              </span>
-            </div>
-          </li>
+            <li
+              key={msg.id ?? `${msg.sender_id}-${msg.created_at ?? ''}`}
+              className={`chat-page__msg ${mine ? 'chat-page__msg--mine' : 'chat-page__msg--other'}`}
+              data-mine={mine}
+            >
+              <div className="chat-page__bubble">
+                <span className="chat-page__msg-content">{msg.content}</span>
+                <span className="chat-page__msg-time">
+                  {msg.created_at
+                    ? new Date(msg.created_at).toLocaleTimeString('zh-CN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : ''}
+                </span>
+              </div>
+            </li>
           );
         })}
       </ul>
