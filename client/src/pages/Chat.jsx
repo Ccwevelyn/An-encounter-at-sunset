@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getOtherProfile, getMessages, sendMessage } from '../api';
 import { BOT_NAMES, isBotId, isMineMessage } from '../constants/chat';
-import mentorAvatar from '../assets/mentor-avatar.png';
 import './Chat.css';
 
 const MENTOR_FIRST_MSG = {
@@ -11,7 +10,6 @@ const MENTOR_FIRST_MSG = {
   content: 'hello,我是王哥',
   created_at: new Date().toISOString(),
 };
-const BOT_AVATAR = { '0': mentorAvatar };
 
 export default function Chat({ user }) {
   const { partnerId } = useParams();
@@ -98,9 +96,7 @@ export default function Chat({ user }) {
       <header className="chat-page__header">
         <Link to={backTo} className="chat-page__back">← 返回</Link>
         <div className="chat-page__title-wrap">
-          {isBot && BOT_AVATAR[partnerId] ? (
-            <img src={BOT_AVATAR[partnerId]} alt="" className="chat-page__avatar" />
-          ) : partner?.profile?.avatar ? (
+          {partner?.profile?.avatar ? (
             <img src={partner.profile.avatar} alt="" className="chat-page__avatar" />
           ) : (
             <span className="chat-page__avatar-placeholder" />
@@ -114,7 +110,7 @@ export default function Chat({ user }) {
 
       <ul className="chat-page__list" ref={listRef}>
         {displayMessages.map((msg) => {
-          const mine = isMineMessage(msg, myId);
+          const mine = typeof msg.isMine === 'boolean' ? msg.isMine : isMineMessage(msg, myId);
           return (
             <li
               key={msg.id ?? `${msg.sender_id}-${msg.created_at ?? ''}`}

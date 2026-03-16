@@ -418,7 +418,8 @@ router.get('/list', async (req, res) => {
       matchReason: r.match_reason || undefined,
     });
   }
-  const list = Array.from(byPartner.values());
+  // 真人匹配里排除 partnerId 0/1/2，避免与三个 AI 冲突（否则会多出一条如 xiaoqi）
+  const list = Array.from(byPartner.values()).filter((p) => !BOT_IDS.includes(Number(p.partnerId)));
   const now = new Date().toISOString();
   for (const id of BOT_IDS) {
     list.unshift({

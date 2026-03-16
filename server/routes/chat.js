@@ -111,28 +111,39 @@ const BOT_FIRST_MSG = {
   0: { id: 0, match_id: 0, sender_id: 0, content: 'hello,我是王哥', created_at: new Date().toISOString() },
 };
 
+function withIsMine(messages, currentUserId) {
+  if (!messages || !messages.length) return messages;
+  const uid = Number(currentUserId);
+  return messages.map((m) => {
+    const sid = m.sender_id != null ? Number(m.sender_id) : null;
+    const isMine = uid > 0 && sid === uid && !BOT_IDS.includes(sid);
+    return { ...m, sender_id: sid, isMine };
+  });
+}
+
 router.get('/:partnerId', async (req, res) => {
   const partnerId = parseInt(req.params.partnerId, 10);
   const currentUserId = req.userId != null ? Number(req.userId) : null;
   if (isBot(partnerId)) {
     const key = storeKey(req.userId, partnerId);
     const list = botChatStore.get(key)?.messages ?? [];
-    // 导师(0)：无历史时必须返回首句「hello,我是王哥」
     if (partnerId === 0 && list.length === 0) {
-      return res.json({ messages: [BOT_FIRST_MSG[0]], currentUserId: currentUserId });
+      const msgs = withIsMine([BOT_FIRST_MSG[0]], currentUserId);
+      return res.json({ messages: msgs, currentUserId: currentUserId });
     }
     if (list.length === 0) return res.json({ messages: [], currentUserId: currentUserId });
-    return res.json({ messages: list, currentUserId: currentUserId });
+    return res.json({ messages: withIsMine(list, currentUserId), currentUserId: currentUserId });
   }
   const matchId = await getMatchId(req.userId, partnerId);
   if (!matchId) {
     return res.status(404).json({ error: '未与该用户匹配' });
   }
-  const messages = await db.prepare(`
+  const rows = await db.prepare(`
     SELECT id, match_id, sender_id, content, created_at
     FROM messages WHERE match_id = ?
     ORDER BY created_at ASC
   `).all(matchId);
+  const messages = withIsMine(rows, currentUserId);
   res.json({ messages, currentUserId: currentUserId });
 });
 
@@ -149,12 +160,12 @@ router.post('/:partnerId', async (req, res) => {
     const now = new Date().toISOString();
     const uid = Number(req.userId);
     const pid = Number(partnerId);
-    const userMsg = { id: store.messages.length + 1, match_id: 0, sender_id: uid, content: String(content).trim(), created_at: now };
+    const userMsg = { id: store.messages.length + 1, match_id: 0, sender_id: uid, content: String(content).trim(), created_at: now, isMine: true };
     store.messages.push(userMsg);
     const botReply = await getBotReply(partnerId, content);
     const botContents = Array.isArray(botReply) ? botReply : [botReply];
     const botMessages = botContents.map((c) => {
-      const botMsg = { id: store.messages.length + 1, match_id: 0, sender_id: pid, content: String(c).trim(), created_at: now };
+      const botMsg = { id: store.messages.length + 1, match_id: 0, sender_id: pid, content: String(c).trim(), created_at: now, isMine: false };
       store.messages.push(botMsg);
       return botMsg;
     });
@@ -166,7 +177,8 @@ router.post('/:partnerId', async (req, res) => {
   }
   const result = await db.prepare('INSERT INTO messages (match_id, sender_id, content) VALUES (?, ?, ?)').run(matchId, req.userId, String(content).trim());
   const row = await db.prepare('SELECT id, match_id, sender_id, content, created_at FROM messages WHERE id = ?').get(result.lastInsertRowid);
-  res.json({ message: row, currentUserId: Number(req.userId) });
+  const msg = row ? { ...row, sender_id: Number(row.sender_id), isMine: true } : row;
+  res.json({ message: msg, currentUserId: Number(req.userId) });
 });
 
 export default router;
