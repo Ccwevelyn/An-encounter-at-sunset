@@ -89,16 +89,16 @@
   align-items: flex-start;
 }
 
-/* 自己/发送方：消息在右侧（class + data 双保险，保证渲染即正确） */
+/* 自己/发送方：消息必须在右侧，用 !important 覆盖任何冲突 */
 .chat-page__msg--mine,
 .chat-page__msg[data-mine="true"] {
-  justify-content: flex-end;
+  justify-content: flex-end !important;
 }
 
 .chat-page__msg--mine .chat-page__bubble,
 .chat-page__msg[data-mine="true"] .chat-page__bubble {
-  margin-left: auto;
-  margin-right: 0;
+  margin-left: auto !important;
+  margin-right: 0 !important;
   align-items: flex-end;
 }
 

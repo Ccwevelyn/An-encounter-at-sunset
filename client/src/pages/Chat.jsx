@@ -114,14 +114,15 @@ export default function Chat({ user }) {
 
       <ul className="chat-page__list" ref={listRef}>
         {displayMessages.map((msg) => {
-          const mine = typeof msg.isMine === 'boolean' ? msg.isMine : isMineMessage(msg, myId);
+          const mine = msg.isMine === true || (msg.isMine !== false && isMineMessage(msg, myId));
           return (
             <li
               key={msg.id ?? `${msg.sender_id}-${msg.created_at ?? ''}`}
               className={`chat-page__msg ${mine ? 'chat-page__msg--mine' : 'chat-page__msg--other'}`}
               data-mine={mine}
+              style={mine ? { justifyContent: 'flex-end' } : { justifyContent: 'flex-start' }}
             >
-              <div className="chat-page__bubble">
+              <div className="chat-page__bubble" style={mine ? { marginLeft: 'auto', marginRight: 0 } : undefined}>
                 <span className="chat-page__msg-content">{msg.content}</span>
                 <span className="chat-page__msg-time">
                   {msg.created_at
