@@ -17,12 +17,13 @@
 
 2. 打开 [render.com](https://render.com)，用 GitHub 登录 → **New** → **Web Service**，选你的仓库。
 
-3. 配置：
-   - **Build Command**：`npm run install:all`（在 Render 上不跑前端构建，避免 OOM；前端使用仓库里已提交的 `client/dist`）
+3. 配置（**必须这样配，聊天左右才会在线上正确**）：
+   - **Build Command**：`npm run install:all && npm run build`
    - **Start Command**：`npm run start`
    - **Instance Type**：选 **Free**
-   - 若出现 `better-sqlite3` / `invalid ELF header`，请确认**未**把 `server/node_modules` 提交到仓库，且 Build Command 为 `npm run install:all`，让依赖在 Linux 上重新安装。
-   - **修改前端后**：在本地执行 `npm run build`，把生成的 `client/dist` 一并提交并 push，线上重新部署后才会看到新页面。
+   - 这样每次部署都会在 Render 上构建最新前端，你发的消息会稳定显示在右侧。
+   - 若出现 `better-sqlite3` / `invalid ELF header`，请确认**未**把 `server/node_modules` 提交到仓库，让依赖在 Linux 上重新安装。
+   - 也可在 Render 里用 **Blueprint** 连接本仓库，根目录的 `render.yaml` 已写好上述命令，无需再填。
 
 4. 创建后会自动部署。部署完成会得到一个 `xxx.onrender.com` 的网址，用浏览器打开即可。
 

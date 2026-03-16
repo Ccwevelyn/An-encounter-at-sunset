@@ -1,0 +1,7 @@
+# Render 部署配置：一次构建前端+后端，保证线上左右显示正确
+services:
+  - type: web
+    name: an-encounter-at-sunset
+    runtime: node
+    buildCommand: npm run install:all && npm run build
+    startCommand: npm run start
