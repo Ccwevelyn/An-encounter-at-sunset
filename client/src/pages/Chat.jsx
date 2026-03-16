@@ -66,7 +66,7 @@ export default function Chat({ user }) {
     setSending(true);
     try {
       const data = await sendMessage(partnerId, text);
-      if (data.message?.sender_id != null) setCurrentUserId(Number(data.message.sender_id));
+      if (data.currentUserId != null) setCurrentUserId(Number(data.currentUserId));
       const botList = data.botMessages || (data.botMessage ? [data.botMessage] : []);
       setMessages((m) => [...m, data.message, ...botList]);
       setInput('');
@@ -90,8 +90,7 @@ export default function Chat({ user }) {
   const displayMessages = isBot && partnerId === '0' && messages.length === 0
     ? [MENTOR_FIRST_MSG]
     : messages;
-  const myId = currentUserId != null ? Number(currentUserId) : Number(user?.id ?? user?.userId ?? 0) || null;
-  const isMineMsg = (sid) => myId != null && myId > 0 && myId === sid && !BOT_SENDER_IDS.includes(sid);
+  const myId = (currentUserId != null && currentUserId !== 0) ? Number(currentUserId) : Number(user?.id ?? user?.userId ?? 0) || 0;
 
   return (
     <div className="chat-page">
@@ -115,11 +114,11 @@ export default function Chat({ user }) {
       <ul className="chat-page__list" ref={listRef}>
         {displayMessages.map((msg) => {
           const sid = msg.sender_id != null ? Number(msg.sender_id) : NaN;
-          const mine = isMineMsg(sid);
+          const isMine = myId > 0 && myId === sid && !BOT_SENDER_IDS.includes(sid);
           return (
           <li
             key={msg.id ?? `${msg.sender_id}-${msg.created_at || ''}`}
-            className={`chat-page__msg ${mine ? 'chat-page__msg--mine' : 'chat-page__msg--other'}`}
+            className={`chat-page__msg ${isMine ? 'chat-page__msg--mine' : 'chat-page__msg--other'}`}
           >
             <div className="chat-page__bubble">
               <span className="chat-page__msg-content">{msg.content}</span>

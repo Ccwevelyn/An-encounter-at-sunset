@@ -158,7 +158,7 @@ router.post('/:partnerId', async (req, res) => {
       store.messages.push(botMsg);
       return botMsg;
     });
-    return res.json({ message: userMsg, botMessages });
+    return res.json({ message: userMsg, botMessages, currentUserId: Number(req.userId) });
   }
   const matchId = await getMatchId(req.userId, partnerId);
   if (!matchId) {
