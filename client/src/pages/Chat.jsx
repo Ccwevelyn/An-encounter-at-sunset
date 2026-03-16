@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getOtherProfile, getMessages, sendMessage } from '../api';
-import { BOT_NAMES, isBotId, isMineMessage } from '../constants/chat';
+import { BOT_NAMES, isBotId, isMineMessage, isMineInBotChat } from '../constants/chat';
 import mentorAvatar from '../assets/mentor-avatar.png';
 import './Chat.css';
 
@@ -113,11 +113,16 @@ export default function Chat({ user }) {
       </header>
 
       <ul className="chat-page__list" ref={listRef}>
-        {displayMessages.map((msg) => {
-          const mine = msg.isMine === true || (msg.isMine !== false && isMineMessage(msg, myId));
+        {displayMessages.map((msg, idx) => {
+          const fromBackend = typeof msg.isMine === 'boolean';
+          const mine = fromBackend
+            ? msg.isMine
+            : isBot
+              ? isMineInBotChat(msg)
+              : isMineMessage(msg, myId);
           return (
             <li
-              key={msg.id ?? `${msg.sender_id}-${msg.created_at ?? ''}`}
+              key={msg.id != null ? `msg-${msg.id}` : `msg-${idx}-${msg.sender_id}-${msg.created_at ?? ''}`}
               className={`chat-page__msg ${mine ? 'chat-page__msg--mine' : 'chat-page__msg--other'}`}
               data-mine={mine}
               style={mine ? { justifyContent: 'flex-end' } : { justifyContent: 'flex-start' }}

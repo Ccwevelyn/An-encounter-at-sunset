@@ -19,3 +19,10 @@ export function isMineMessage(msg, myId) {
   if (BOT_IDS.includes(sid)) return false;
   return sid === myId;
 }
+
+/** 和 bot 聊天时：sender_id 不是 0/1/2 就是自己发的，不依赖 currentUserId */
+export function isMineInBotChat(msg) {
+  const sid = msg.sender_id != null ? Number(msg.sender_id) : NaN;
+  if (Number.isNaN(sid)) return false;
+  return !BOT_IDS.includes(sid);
+}
