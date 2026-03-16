@@ -21,10 +21,13 @@ export default function Chat({ user }) {
 
   const [partner, setPartner] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [currentUserId, setCurrentUserId] = useState(null); // 用于前端判断 isMine，不依赖后端
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const listRef = useRef(null);
+
+  const myId = currentUserId != null ? Number(currentUserId) : (user?.id != null ? Number(user.id) : null);
 
   const title = isBot ? (BOT_NAMES[Number(partnerId)] || '聊天') : (partner?.user?.nickname || '聊天');
 
@@ -38,7 +41,10 @@ export default function Chat({ user }) {
 
   useEffect(() => {
     getMessages(partnerId)
-      .then((d) => setMessages(Array.isArray(d.messages) ? d.messages : []))
+      .then((d) => {
+        if (d.currentUserId != null) setCurrentUserId(d.currentUserId);
+        setMessages(Array.isArray(d.messages) ? d.messages : []);
+      })
       .catch(() => setMessages([]))
       .finally(() => setLoading(false));
   }, [partnerId]);
@@ -46,7 +52,10 @@ export default function Chat({ user }) {
   useEffect(() => {
     const id = setInterval(() => {
       getMessages(partnerId)
-        .then((d) => setMessages(Array.isArray(d.messages) ? d.messages : []))
+        .then((d) => {
+          if (d.currentUserId != null) setCurrentUserId(d.currentUserId);
+          setMessages(Array.isArray(d.messages) ? d.messages : []);
+        })
         .catch(() => {});
     }, 3000);
     return () => clearInterval(id);
@@ -63,7 +72,8 @@ export default function Chat({ user }) {
     setSending(true);
     try {
       const d = await sendMessage(partnerId, text);
-      const mine = { ...d.message, isMine: true };
+      if (d.currentUserId != null) setCurrentUserId(d.currentUserId);
+      const mine = { ...d.message };
       const bots = (d.botMessages || (d.botMessage ? [d.botMessage] : [])).map((b) => ({ ...b, isMine: false }));
       setMessages((prev) => [...prev, mine, ...bots]);
       setInput('');
@@ -106,7 +116,7 @@ export default function Chat({ user }) {
 
       <ul className="chat-page__list" ref={listRef}>
         {list.map((msg, i) => {
-          const mine = msg.isMine === true;
+          const mine = myId != null && Number(msg.sender_id) === myId;
           return (
             <li
               key={msg.id != null ? msg.id : `i-${i}`}
