@@ -57,7 +57,7 @@
 ## 查看数据库
 
 - **本地用 SQLite 时**：在浏览器打开 `/admin?secret=你的ADMIN_SECRET`（环境变量 `ADMIN_SECRET` 需与 URL 中 `secret` 一致），可查看/编辑 users、profiles、matches、messages 等表。
-- **部署用 PostgreSQL 时**：不提供 `/admin`，在 Render（或所用平台）控制台里打开该 PostgreSQL 实例，用其自带的数据库管理或外部客户端连接 `DATABASE_URL` 查看。
+- **部署到 Render 时**：在 Environment 配好 `ADMIN_SECRET` 后，访问 `https://你的服务.onrender.com/admin?secret=你设的ADMIN_SECRET` 即可查看/编辑数据（SQLite 或 PostgreSQL 均可）。
 
 ## 文件架构
 
@@ -81,6 +81,7 @@
 │   ├── admin.html          # 本地数据库管理页
 │   └── package.json
 ├── package.json            # 根脚本 install:all、build、start
+├── render.yaml             # Render 部署配置
 ├── README.md、DEPLOY.md
 └── .gitignore
 ```
