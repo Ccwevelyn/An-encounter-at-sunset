@@ -6,7 +6,7 @@ import mentorAvatar from '../assets/mentor-avatar.png';
 import './MatchResult.css';
 
 const BOT_IDS = ['0', '1', '2'];
-const BOT_NAMES = { '0': '最伟大最尊敬的导师', '1': '看不上你对象的朋友' };
+const BOT_NAMES = { '0': '最伟大最尊敬的导师', '1': '看不上你对象的朋友', '2': '知心姐姐' };
 const BOT_AVATAR = { '0': mentorAvatar };
 const BOT_BIOS = {
   '0': '一位善于提问、常给你启发的思考导师。不直接给答案，而是引导你往深处想，帮你理清思路、看见盲区。适合想被推一把、愿意被问住的人。',
@@ -51,7 +51,7 @@ export default function MatchResult({ user }) {
     }).catch(() => {});
   }, [partnerId, isBot, location.state?.matchReason]);
 
-  // 两个 AI 角色（0 导师、1 看不上你对象的朋友）：直接用本地数据展示档案，不依赖接口
+  // 三个 AI 角色（0 导师、1 看不上你对象的朋友、2 知心姐姐）：直接用本地数据展示档案，不依赖接口
   if (isBot) {
     const name = BOT_NAMES[pid] || (partner?.user?.nickname) || '角色';
     const bio = BOT_BIOS[pid] || '';

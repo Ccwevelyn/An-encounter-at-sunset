@@ -30,7 +30,7 @@ export default function ChatList({ user, onLogout }) {
   }, [list]);
 
   const displayName = (item) => item.partnerNickname || partnerNames[item.partnerId] || null;
-  const isBot = (id) => [0, 1].includes(Number(id));
+  const isBot = (id) => [0, 1, 2].includes(Number(id));
   const botList = list.filter((item) => isBot(item.partnerId));
   const realList = list.filter((item) => !isBot(item.partnerId));
 

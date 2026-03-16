@@ -4,9 +4,9 @@ import { getOtherProfile, getMessages, sendMessage } from '../api';
 import mentorAvatar from '../assets/mentor-avatar.png';
 import './Chat.css';
 
-const BOT_IDS = ['0', '1'];
-const BOT_SENDER_IDS = [0, 1]; // 消息里 sender_id 为 0/1 的为 AI，显示在左侧
-const BOT_NAMES = { '0': '最伟大最尊敬的导师', '1': '看不上你对象的朋友' };
+const BOT_IDS = ['0', '1', '2'];
+const BOT_SENDER_IDS = [0, 1, 2]; // 消息里 sender_id 为 0/1/2 的为 AI，显示在左侧
+const BOT_NAMES = { '0': '最伟大最尊敬的导师', '1': '看不上你对象的朋友', '2': '知心姐姐' };
 const BOT_AVATAR = { '0': mentorAvatar };
 // 导师首句，前端兜底（接口未返回时也显示）
 const MENTOR_FIRST_MSG = { id: 'first', sender_id: 0, content: 'hello,我是王哥', created_at: new Date().toISOString() };
@@ -66,6 +66,7 @@ export default function Chat({ user }) {
     setSending(true);
     try {
       const data = await sendMessage(partnerId, text);
+      if (data.message?.sender_id != null) setCurrentUserId(Number(data.message.sender_id));
       const botList = data.botMessages || (data.botMessage ? [data.botMessage] : []);
       setMessages((m) => [...m, data.message, ...botList]);
       setInput('');
@@ -89,7 +90,8 @@ export default function Chat({ user }) {
   const displayMessages = isBot && partnerId === '0' && messages.length === 0
     ? [MENTOR_FIRST_MSG]
     : messages;
-  const myId = currentUserId != null ? Number(currentUserId) : Number(user?.id ?? user?.userId ?? 0);
+  const myId = currentUserId != null ? Number(currentUserId) : Number(user?.id ?? user?.userId ?? 0) || null;
+  const isMineMsg = (sid) => myId != null && myId > 0 && myId === sid && !BOT_SENDER_IDS.includes(sid);
 
   return (
     <div className="chat-page">
@@ -113,11 +115,11 @@ export default function Chat({ user }) {
       <ul className="chat-page__list" ref={listRef}>
         {displayMessages.map((msg) => {
           const sid = msg.sender_id != null ? Number(msg.sender_id) : NaN;
-          const isMine = myId > 0 && myId === sid && !BOT_SENDER_IDS.includes(sid);
+          const mine = isMineMsg(sid);
           return (
           <li
             key={msg.id ?? `${msg.sender_id}-${msg.created_at || ''}`}
-            className={`chat-page__msg ${isMine ? 'chat-page__msg--mine' : 'chat-page__msg--other'}`}
+            className={`chat-page__msg ${mine ? 'chat-page__msg--mine' : 'chat-page__msg--other'}`}
           >
             <div className="chat-page__bubble">
               <span className="chat-page__msg-content">{msg.content}</span>

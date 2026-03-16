@@ -101,8 +101,8 @@ router.put('/', async (req, res) => {
   res.json({ ok: true });
 });
 
-const BOT_IDS = [0, 1];
-const BOT_NAMES = { 0: '最伟大最尊敬的导师', 1: '看不上你对象的朋友' };
+const BOT_IDS = [0, 1, 2];
+const BOT_NAMES = { 0: '最伟大最尊敬的导师', 1: '看不上你对象的朋友', 2: '知心姐姐' };
 
 // 获取其他用户公开档案（用于匹配结果、聊天对象信息）
 router.get('/:userId', async (req, res) => {

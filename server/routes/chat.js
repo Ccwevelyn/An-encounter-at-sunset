@@ -6,8 +6,8 @@ import { callDeepSeek } from '../deepseek.js';
 const router = Router();
 router.use(authMiddleware);
 
-const BOT_IDS = [0, 1];
-const BOT_NAMES = { 0: '最伟大最尊敬的导师', 1: '看不上你对象的朋友' };
+const BOT_IDS = [0, 1, 2];
+const BOT_NAMES = { 0: '最伟大最尊敬的导师', 1: '看不上你对象的朋友', 2: '知心姐姐' };
 
 /** 单条回复最大字数（约半屏），超出则分条或截断并引导 */
 const MAX_REPLY_CHARS = 80;
@@ -17,12 +17,14 @@ const BOT_SYSTEMS = {
 重要：单条回复严格控制在${MAX_REPLY_CHARS}字以内（约半屏）。若需展开，先给一句精炼的点拨，结尾可引导用户追问（如「想听更多可以接着问」），不要一次写很长。`,
   1: `你是用户的朋友，但你看不上他/她的对象，总觉得对方配不上、有问题。用中文回复，直接、毒舌、爱吐槽用户的另一半，经常泼冷水、挑刺（比如嫌对方不够好、不靠谱、配不上你朋友），但本质是关心用户、怕 ta 吃亏。
 重要：单条回复控制在${MAX_REPLY_CHARS}字以内，简短有力。若想多说，分多条发或结尾说「还有想吐槽的，你接着问」。`,
+  2: `你是一位温柔和蔼的知心大姐姐。用中文回复，语气温暖、包容、善解人意，让人愿意倾诉。可以共情、安慰、给建议，但不要说教。
+重要：单条回复控制在${MAX_REPLY_CHARS}字以内（约半屏）。若需展开，先给一句温暖回应，结尾可引导用户继续问（如「想听更多可以慢慢说」），不要一次写很长。`,
 };
 
 function getBotFallback(partnerId, userMessage) {
   const t = String(userMessage).trim().toLowerCase();
   if (!t) {
-    return { 0: '再往深处想一步。', 1: '你对象呢？说说。' }[partnerId];
+    return { 0: '再往深处想一步。', 1: '你对象呢？说说。', 2: '没事，慢慢说。' }[partnerId];
   }
   if (partnerId === 0) {
     if (t.includes('？') || t.includes('?')) return '这个问题，值得你再想深一层。';
@@ -34,6 +36,12 @@ function getBotFallback(partnerId, userMessage) {
     if (t.length <= 2) return '就这？你对象呢？';
     if (t.includes('谢谢')) return '谢啥，别被忽悠就行。';
     return '反正我瞧不上 ta，你多留个心眼。';
+  }
+  if (partnerId === 2) {
+    if (t.includes('你好') || t.includes('在吗')) return '在的，你说。';
+    if (t.length <= 2) return '嗯，然后呢？';
+    if (t.includes('谢谢')) return '不客气，有事随时说。';
+    return '我在听。';
   }
   return '嗯。';
 }
