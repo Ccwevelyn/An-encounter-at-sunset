@@ -111,18 +111,13 @@ const BOT_FIRST_MSG = {
   0: { id: 0, match_id: 0, sender_id: 0, content: 'hello,我是王哥', created_at: new Date().toISOString() },
 };
 
-function splitMineOther(messages, currentUserId) {
-  if (!messages || !messages.length) return { myMessages: [], otherMessages: [] };
+function addIsMine(messages, currentUserId) {
   const uid = Number(currentUserId);
-  const myMessages = [];
-  const otherMessages = [];
-  for (const m of messages) {
+  return (messages || []).map((m) => {
     const sid = m.sender_id != null ? Number(m.sender_id) : null;
-    const normalized = { ...m, sender_id: sid };
-    if (uid > 0 && sid === uid) myMessages.push(normalized);
-    else otherMessages.push(normalized);
-  }
-  return { myMessages, otherMessages };
+    const isMine = uid > 0 && sid === uid;
+    return { ...m, sender_id: sid, isMine };
+  });
 }
 
 router.get('/:partnerId', async (req, res) => {
@@ -132,17 +127,11 @@ router.get('/:partnerId', async (req, res) => {
     const key = storeKey(req.userId, partnerId);
     const list = botChatStore.get(key)?.messages ?? [];
     if (partnerId === 0 && list.length === 0) {
-      return res.json({
-        myMessages: [],
-        otherMessages: [BOT_FIRST_MSG[0]],
-        currentUserId: currentUserId,
-      });
+      const messages = addIsMine([BOT_FIRST_MSG[0]], currentUserId);
+      return res.json({ messages, currentUserId });
     }
-    if (list.length === 0) {
-      return res.json({ myMessages: [], otherMessages: [], currentUserId: currentUserId });
-    }
-    const { myMessages, otherMessages } = splitMineOther(list, currentUserId);
-    return res.json({ myMessages, otherMessages, currentUserId: currentUserId });
+    const messages = addIsMine(list, currentUserId);
+    return res.json({ messages, currentUserId });
   }
   const matchId = await getMatchId(req.userId, partnerId);
   if (!matchId) {
@@ -153,8 +142,8 @@ router.get('/:partnerId', async (req, res) => {
     FROM messages WHERE match_id = ?
     ORDER BY created_at ASC
   `).all(matchId);
-  const { myMessages, otherMessages } = splitMineOther(rows, currentUserId);
-  res.json({ myMessages, otherMessages, currentUserId: currentUserId });
+  const messages = addIsMine(rows, currentUserId);
+  res.json({ messages, currentUserId });
 });
 
 router.post('/:partnerId', async (req, res) => {
