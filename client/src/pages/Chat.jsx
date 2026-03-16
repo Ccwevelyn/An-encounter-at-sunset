@@ -66,9 +66,8 @@ export default function Chat({ user }) {
     setSending(true);
     try {
       const data = await sendMessage(partnerId, text);
-      const msgs = [data.message];
-      if (data.botMessage) msgs.push(data.botMessage);
-      setMessages((m) => [...m, ...msgs]);
+      const botList = data.botMessages || (data.botMessage ? [data.botMessage] : []);
+      setMessages((m) => [...m, data.message, ...botList]);
       setInput('');
     } catch (err) {
       console.error(err);
@@ -118,8 +117,7 @@ export default function Chat({ user }) {
           return (
           <li
             key={msg.id ?? `${msg.sender_id}-${msg.created_at || ''}`}
-            className={`chat-page__msg ${isMine ? 'mine chat-page__msg--mine' : ''}`}
-            style={{ display: 'flex', width: '100%', justifyContent: isMine ? 'flex-end' : 'flex-start', boxSizing: 'border-box' }}
+            className={`chat-page__msg ${isMine ? 'chat-page__msg--mine' : 'chat-page__msg--other'}`}
           >
             <div className="chat-page__bubble">
               <span className="chat-page__msg-content">{msg.content}</span>

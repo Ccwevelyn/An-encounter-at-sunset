@@ -75,14 +75,28 @@
 .chat-page__msg {
   display: flex;
   width: 100%;
-  justify-content: flex-start;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
-/* 自己发的消息在右侧 */
-.chat-page__msg.mine,
-.chat-page__msg.chat-page__msg--mine {
-  justify-content: flex-end !important;
+/* 对方/接收方：消息在左侧 */
+.chat-page__msg--other {
+  justify-content: flex-start;
+}
+
+.chat-page__msg--other .chat-page__bubble {
+  margin-right: auto;
+  align-items: flex-start;
+}
+
+/* 自己/发送方：消息在右侧 */
+.chat-page__msg--mine {
+  justify-content: flex-end;
+}
+
+.chat-page__msg--mine .chat-page__bubble {
+  margin-left: auto;
+  align-items: flex-end;
 }
 
 .chat-page__bubble {
@@ -90,11 +104,7 @@
   flex-direction: column;
   align-items: flex-start;
   max-width: 85%;
-}
-
-.chat-page__msg.mine .chat-page__bubble,
-.chat-page__msg.chat-page__msg--mine .chat-page__bubble {
-  align-items: flex-end;
+  flex-shrink: 0;
 }
 
 .chat-page__msg-content {
@@ -104,10 +114,11 @@
   border-radius: 12px;
   font-size: 0.9rem;
   word-break: break-word;
+  max-height: 50vh;
+  overflow-y: auto;
 }
 
-.chat-page__msg.mine .chat-page__msg-content,
-.chat-page__msg.chat-page__msg--mine .chat-page__msg-content {
+.chat-page__msg--mine .chat-page__msg-content {
   background: var(--accent);
   border-color: var(--accent);
   color: #0d0d0d;
