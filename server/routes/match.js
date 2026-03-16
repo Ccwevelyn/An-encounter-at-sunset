@@ -390,9 +390,9 @@ router.get('/with/:partnerId', async (req, res) => {
   res.json({ matchId: row.id, mode: row.mode, createdAt: row.created_at, matchReason: row.match_reason || undefined });
 });
 
-// 当前用户的所有匹配（含对方昵称，供聊天列表用）；同一对象只显示一次（去重），并默认包含三个聊天角色
-const BOT_IDS = [0, 1, 2];
-const BOT_NAMES = { 0: '最伟大最尊敬的导师', 1: '看不上你对象的朋友', 2: '知心姐姐' };
+// 当前用户的所有匹配（含对方昵称，供聊天列表用）；同一对象只显示一次（去重），并默认包含两个聊天角色
+const BOT_IDS = [0, 1];
+const BOT_NAMES = { 0: '最伟大最尊敬的导师', 1: '看不上你对象的朋友' };
 
 router.get('/list', async (req, res) => {
   const rows = await db.prepare(`

@@ -4,9 +4,9 @@ import { getOtherProfile, getMessages, sendMessage } from '../api';
 import mentorAvatar from '../assets/mentor-avatar.png';
 import './Chat.css';
 
-const BOT_IDS = ['0', '1', '2'];
-const BOT_SENDER_IDS = [0, 1, 2]; // 消息里 sender_id 为 0/1/2 的为 AI，显示在左侧
-const BOT_NAMES = { '0': '最伟大最尊敬的导师', '1': '看不上你对象的朋友', '2': '知心姐姐' };
+const BOT_IDS = ['0', '1'];
+const BOT_SENDER_IDS = [0, 1]; // 消息里 sender_id 为 0/1 的为 AI，显示在左侧
+const BOT_NAMES = { '0': '最伟大最尊敬的导师', '1': '看不上你对象的朋友' };
 const BOT_AVATAR = { '0': mentorAvatar };
 // 导师首句，前端兜底（接口未返回时也显示）
 const MENTOR_FIRST_MSG = { id: 'first', sender_id: 0, content: 'hello,我是王哥', created_at: new Date().toISOString() };
